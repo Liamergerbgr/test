@@ -928,7 +928,6 @@
       await addUsage(currentUser.uid);
       if (oldPass) savePassword(oldPass);
       if (newPass) savePassword(newPass);
-      const notes = g('comparison-notes').value.trim();
       if (notes) saveNote(notes);
       const elapsed = Math.round((Date.now() - startTime) / 1000);
       saveRenewalRecord(result.data?.clientName || 'Unknown Client', elapsed);
