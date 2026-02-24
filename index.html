@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RenewalScan AI — Policy Comparison</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0f2744; --navy-light: #1a3a5c; --blue: #2563eb; --blue-light: #3b82f6;
+      --green: #059669; --red: #dc2626; --amber: #d97706;
+      --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
+      --gray-400: #94a3b8; --gray-600: #4b5563; --gray-700: #374151; --gray-900: #111827;
+      --white: #ffffff; --shadow: 0 4px 24px rgba(15,39,68,.10); --shadow-lg: 0 8px 40px rgba(15,39,68,.16);
+      --radius: 12px; --radius-sm: 8px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; color: var(--gray-700); background: var(--gray-50); line-height: 1.6; min-height: 100vh; }
+
+    /* NAV */
+    nav { background: var(--navy); padding: 0 24px; position: sticky; top: 0; z-index: 100; }
+    .nav-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .nav-logo { color: #fff; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; cursor: pointer; }
+    .nav-logo span { color: var(--blue-light); }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-link { color: #94a3b8; font-size: 14px; font-weight: 500; padding: 8px 14px; border-radius: 6px; cursor: pointer; transition: color .15s, background .15s; border: none; background: none; font-family: 'Inter', sans-serif; }
+    .nav-link:hover { color: #fff; background: rgba(255,255,255,.08); }
+    .nav-btn { background: var(--blue); color: #fff; font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 6px; cursor: pointer; border: none; transition: background .15s; font-family: 'Inter', sans-serif; }
+    .nav-btn:hover { background: var(--blue-light); }
+    .nav-user { display: flex; align-items: center; gap: 10px; }
+    .nav-user-name { color: #94a3b8; font-size: 14px; }
+    .nav-signout { color: #94a3b8; font-size: 13px; cursor: pointer; border: none; background: none; padding: 6px 10px; border-radius: 6px; font-family: 'Inter', sans-serif; }
+    .nav-signout:hover { color: #fff; background: rgba(255,255,255,.08); }
+    @media (max-width: 600px) { .nav-link { display: none; } }
+
+    /* PAGES */
+    .page { display: none; }
+    .page.active { display: block; }
+    .page-auth { display: none; }
+    .page-auth.active { display: grid; }
+    @media (max-width: 768px) { .page-auth.active { display: flex; flex-direction: column; } }
+
+    /* LANDING */
+    .hero { background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 100%); color: #fff; padding: 80px 24px; text-align: center; }
+    .hero-inner { max-width: 720px; margin: 0 auto; }
+    .hero-badge { display: inline-block; background: rgba(37,99,235,.25); border: 1px solid rgba(59,130,246,.4); color: #93c5fd; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 24px; }
+    .hero h1 { font-size: clamp(28px, 5vw, 52px); font-weight: 800; line-height: 1.15; letter-spacing: -1px; margin-bottom: 20px; }
+    .hero h1 span { color: #60a5fa; }
+    .hero p { font-size: 18px; color: #94a3b8; margin-bottom: 36px; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { background: var(--blue); color: #fff; border: none; padding: 14px 28px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s, transform .1s; font-family: 'Inter', sans-serif; }
+    .btn-primary:hover { background: var(--blue-light); transform: translateY(-1px); }
+    .btn-outline { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.3); padding: 14px 28px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: border-color .15s, background .15s; font-family: 'Inter', sans-serif; }
+    .btn-outline:hover { border-color: #fff; background: rgba(255,255,255,.08); }
+    .hero-stats { display: flex; gap: 40px; justify-content: center; margin-top: 52px; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-num { font-size: 28px; font-weight: 800; color: #fff; }
+    .stat-label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+    .content-section { max-width: 1100px; margin: 0 auto; padding: 60px 24px; }
+    .section-title { font-size: 28px; font-weight: 700; color: var(--navy); text-align: center; margin-bottom: 8px; }
+    .section-sub { font-size: 16px; color: var(--gray-600); text-align: center; margin-bottom: 44px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .card { background: var(--white); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); border: 1px solid var(--gray-200); }
+    .card-icon { font-size: 28px; margin-bottom: 14px; }
+    .card h3 { font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+    .card p { font-size: 14px; color: var(--gray-600); line-height: 1.6; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; }
+    .step { text-align: center; }
+    .step-num { width: 48px; height: 48px; background: var(--blue); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; margin: 0 auto 16px; }
+    .step h3 { font-size: 16px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+    .step p { font-size: 14px; color: var(--gray-600); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+    .price-card { background: #fff; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 28px; position: relative; box-shadow: var(--shadow); }
+    .price-card.featured { border-color: var(--blue); border-width: 2px; }
+    .price-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+    .price-name { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+    .price-amount { font-size: 32px; font-weight: 800; color: var(--navy); }
+    .price-period { font-size: 13px; color: var(--gray-400); font-weight: 400; }
+    .price-limit { font-size: 13px; color: var(--gray-600); margin: 12px 0 20px; }
+    .price-features { list-style: none; }
+    .price-features li { font-size: 13px; color: var(--gray-600); padding: 5px 0; display: flex; align-items: center; gap: 8px; }
+    .price-features li::before { content: '✓'; color: var(--green); font-weight: 700; }
+    footer { background: var(--navy); color: #4b5563; text-align: center; padding: 28px 24px; font-size: 13px; }
+
+    /* AUTH — Split screen */
+    .page-auth { min-height: calc(100vh - 60px); grid-template-columns: 1fr 1fr; }
+    @media (max-width: 768px) { .page-auth { grid-template-columns: 1fr; } .auth-left { display: none; } }
+    .auth-left { background: linear-gradient(160deg, var(--navy) 0%, #0b1e35 100%); display: flex; flex-direction: column; justify-content: center; padding: 64px 52px; position: relative; overflow: hidden; }
+    .auth-left::after { content: ''; position: absolute; bottom: -120px; right: -80px; width: 380px; height: 380px; border-radius: 50%; background: radial-gradient(circle, rgba(37,99,235,.12) 0%, transparent 65%); pointer-events: none; }
+    .auth-left-logo { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-bottom: 52px; }
+    .auth-left-logo span { color: var(--blue-light); }
+    .auth-left h2 { font-size: 30px; font-weight: 800; color: #fff; line-height: 1.25; letter-spacing: -0.5px; margin-bottom: 14px; }
+    .auth-left p { font-size: 15px; color: #64748b; line-height: 1.7; margin-bottom: 44px; }
+    .auth-features { display: flex; flex-direction: column; gap: 22px; }
+    .auth-feature { display: flex; align-items: flex-start; gap: 14px; }
+    .auth-feature-icon { width: 40px; height: 40px; background: rgba(37,99,235,.15); border: 1px solid rgba(59,130,246,.25); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .auth-feature-text strong { display: block; font-size: 14px; font-weight: 600; color: #e2e8f0; margin-bottom: 3px; }
+    .auth-feature-text span { font-size: 13px; color: #475569; }
+    .auth-right { background: #fff; display: flex; align-items: center; justify-content: center; padding: 64px 52px; }
+    @media (max-width: 768px) { .auth-right { padding: 40px 24px; min-height: calc(100vh - 60px); } }
+    .auth-form-wrap { width: 100%; max-width: 360px; }
+    .auth-form-title { font-size: 26px; font-weight: 800; color: var(--navy); margin-bottom: 6px; letter-spacing: -0.5px; }
+    .auth-form-sub { font-size: 14px; color: var(--gray-600); margin-bottom: 28px; }
+    .method-select { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+    .method-btn { border: 2px solid var(--gray-200); background: #fff; border-radius: var(--radius-sm); padding: 14px 10px; cursor: pointer; text-align: center; transition: all .2s; font-family: 'Inter', sans-serif; }
+    .method-btn:hover { border-color: var(--blue-light); background: #f8faff; }
+    .method-btn.active { border-color: var(--blue); background: #eff6ff; }
+    .method-btn-icon { font-size: 22px; margin-bottom: 5px; }
+    .method-btn-label { font-size: 12px; font-weight: 700; color: var(--navy); }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+    input[type="email"], input[type="password"], input[type="text"], input[type="tel"] {
+      width: 100%; padding: 12px 14px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+      font-size: 14px; font-family: 'Inter', sans-serif; color: var(--gray-900); background: #fff;
+      transition: border-color .15s, box-shadow .15s; outline: none;
+    }
+    input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.10); }
+    .input-hint { font-size: 12px; color: var(--gray-400); margin-top: 5px; }
+    .btn-full { width: 100%; padding: 13px; background: var(--blue); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s, transform .1s; font-family: 'Inter', sans-serif; }
+    .btn-full:hover { background: var(--blue-light); transform: translateY(-1px); }
+    .btn-full:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+    .btn-secondary-full { width: 100%; padding: 12px; background: var(--gray-50); color: var(--navy); border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: background .15s; margin-top: 10px; }
+    .btn-secondary-full:hover { background: var(--gray-100); }
+    .auth-link { text-align: center; font-size: 13px; color: var(--gray-600); margin-top: 22px; }
+    .auth-link a { color: var(--blue); cursor: pointer; font-weight: 600; text-decoration: none; }
+    .auth-link a:hover { text-decoration: underline; }
+    .msg-error { background: #fef2f2; border: 1px solid #fca5a5; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: #dc2626; margin-bottom: 16px; display: none; }
+    .msg-error.show { display: block; }
+    .msg-success { background: #f0fdf4; border: 1px solid #86efac; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: #16a34a; margin-bottom: 16px; display: none; }
+    .msg-success.show { display: block; }
+    .verify-icon-wrap { width: 72px; height: 72px; background: #eff6ff; border: 2px solid rgba(37,99,235,.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 24px; }
+
+    /* DASHBOARD */
+    .dash-wrap { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+    .dash-welcome { font-size: 26px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+    .dash-sub { font-size: 15px; color: var(--gray-600); margin-bottom: 28px; }
+    .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 28px; }
+    .dash-card { background: #fff; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--gray-200); }
+    .dash-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-400); margin-bottom: 10px; }
+    .dash-value { font-size: 36px; font-weight: 800; color: var(--navy); line-height: 1; }
+    .dash-card-sub { font-size: 13px; color: var(--gray-600); margin-top: 6px; }
+    .usage-bar-wrap { margin-top: 14px; background: var(--gray-100); border-radius: 99px; height: 8px; overflow: hidden; }
+    .usage-bar { height: 100%; background: var(--blue); border-radius: 99px; transition: width .6s ease; }
+    .dash-cta { background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 100%); border-radius: var(--radius); padding: 32px; color: #fff; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+    .dash-cta h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .dash-cta p { font-size: 14px; color: #94a3b8; }
+    .btn-white { background: #fff; color: var(--navy); border: none; padding: 12px 24px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; transition: background .15s; white-space: nowrap; font-family: 'Inter', sans-serif; }
+    .btn-white:hover { background: var(--gray-100); }
+
+    /* COMPARE */
+    .compare-wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+    .compare-title { font-size: 24px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+    .compare-sub { font-size: 15px; color: var(--gray-600); margin-bottom: 28px; }
+
+    /* Progress steps */
+    .progress-steps { display: flex; align-items: center; margin-bottom: 32px; }
+    .ps-step { display: flex; align-items: center; gap: 8px; }
+    .ps-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; border: 2px solid var(--gray-200); color: var(--gray-400); background: #fff; transition: all .3s; flex-shrink: 0; }
+    .ps-circle.active { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
+    .ps-circle.done { border-color: var(--green); background: var(--green); color: #fff; }
+    .ps-label { font-size: 13px; font-weight: 600; color: var(--gray-400); transition: color .3s; }
+    .ps-label.active { color: var(--navy); }
+    .ps-label.done { color: var(--green); }
+    .ps-connector { flex: 1; height: 2px; background: var(--gray-200); margin: 0 10px; transition: background .3s; }
+    .ps-connector.done { background: var(--green); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Upload */
+    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 600px) { .upload-grid { grid-template-columns: 1fr; } }
+    .upload-zone { border: 2px dashed var(--gray-200); border-radius: var(--radius); padding: 32px 20px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; background: #fff; position: relative; }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: var(--blue); background: #eff6ff; }
+    .upload-zone.loaded { border-color: var(--green); background: #f0fdf4; border-style: solid; }
+    .upload-icon { font-size: 32px; margin-bottom: 8px; }
+    .upload-label-text { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+    .upload-hint-text { font-size: 12px; color: var(--gray-400); }
+    .upload-filename { font-size: 13px; font-weight: 600; color: var(--green); margin-top: 8px; word-break: break-all; }
+    .upload-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .btn-compare { width: 100%; padding: 14px; background: var(--blue); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 16px; font-weight: 700; cursor: pointer; transition: background .15s; font-family: 'Inter', sans-serif; }
+    .btn-compare:hover:not(:disabled) { background: var(--blue-light); }
+    .btn-compare:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Processing */
+    .processing { text-align: center; padding: 60px 20px; display: none; }
+    .processing.show { display: block; }
+    .spinner { width: 52px; height: 52px; border: 4px solid var(--gray-200); border-top-color: var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+    .proc-text { font-size: 18px; font-weight: 600; color: var(--navy); }
+    .proc-sub { font-size: 14px; color: var(--gray-600); margin-top: 6px; }
+
+    /* Results */
+    .results { display: none; }
+    .results.show { display: block; }
+    .results-hdr { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .results-title { font-size: 20px; font-weight: 700; color: var(--navy); }
+    .results-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-copy { background: var(--navy); color: #fff; border: none; padding: 10px 18px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s; font-family: 'Inter', sans-serif; }
+    .btn-copy:hover { background: var(--navy-light); }
+    .btn-copy.copied { background: var(--green); }
+    .btn-reset { background: var(--gray-100); color: var(--navy); border: 1.5px solid var(--gray-200); padding: 10px 18px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .btn-reset:hover { background: var(--gray-200); }
+    .result-box { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--gray-200); }
+    .result-head { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); padding: 24px 28px; }
+    .result-client { font-size: 20px; font-weight: 700; color: #fff; }
+    .result-period { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+    .result-body { padding: 24px 28px; }
+    .totals-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+    @media (max-width: 480px) { .totals-row { grid-template-columns: 1fr; } }
+    .total-box { padding: 18px; border-radius: var(--radius-sm); text-align: center; }
+    .total-box.old { background: #fff8e1; border: 1px solid #fcd34d; border-left: 4px solid #f59e0b; }
+    .total-box.new { background: #ecfdf5; border: 1px solid #6ee7b7; border-left: 4px solid #10b981; }
+    .total-box-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+    .total-box.old .total-box-label { color: #92400e; }
+    .total-box.new .total-box-label { color: #065f46; }
+    .total-box-amount { font-size: 26px; font-weight: 800; }
+    .total-box.old .total-box-amount { color: #d97706; }
+    .total-box.new .total-box-amount { color: #059669; }
+    .change-banner { padding: 12px 16px; border-radius: var(--radius-sm); text-align: center; margin-bottom: 18px; }
+    .change-banner.inc { background: #fef2f2; border: 1px solid #fca5a5; }
+    .change-banner.dec { background: #f0fdf4; border: 1px solid #86efac; }
+    .change-banner.inc .cb-text { color: #dc2626; font-size: 16px; font-weight: 700; }
+    .change-banner.dec .cb-text { color: #16a34a; font-size: 16px; font-weight: 700; }
+    .sect-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--navy); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid var(--gray-200); }
+    .changes-tbl { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+    .changes-tbl th { background: var(--navy); color: #fff; font-size: 11px; font-weight: 600; padding: 10px 12px; text-align: left; text-transform: uppercase; letter-spacing: .5px; }
+    .changes-tbl th:not(:first-child) { text-align: right; }
+    .changes-tbl td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--gray-200); }
+    .changes-tbl td:not(:first-child) { text-align: right; }
+    .changes-tbl tr:last-child td { border-bottom: none; }
+    .changes-tbl tr:nth-child(even) td { background: var(--gray-50); }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: #fff; padding: 12px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); transform: translateY(80px); opacity: 0; transition: all .3s; z-index: 999; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="showPage('landing')">RenewalScan<span>AI</span></div>
+    <div class="nav-links" id="nav-public">
+      <button class="nav-link" onclick="showPage('landing')">Home</button>
+      <button class="nav-link" onclick="scrollToPricing()">Pricing</button>
+      <button class="nav-btn" onclick="showPage('login')">Sign In</button>
+    </div>
+    <div class="nav-user" id="nav-private" style="display:none">
+      <span class="nav-user-name" id="nav-name"></span>
+      <button class="nav-link" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-link" onclick="showPage('compare')">Renewals</button>
+      <button class="nav-signout" onclick="doSignOut()">Sign out</button>
+    </div>
+  </div>
+</nav>
+<div class="toast" id="toast">&#10003; HTML copied — paste into Gmail or Outlook</div>
+
+<!-- ═══════════════════════════════
+     LANDING
+═══════════════════════════════ -->
+<div class="page active" id="page-landing">
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge">AI-Powered for Insurance Advisors</div>
+      <h1>Policy Renewal Comparison <span>in Seconds</span></h1>
+      <p>Upload two PDFs. Get a full premium breakdown instantly. Copy it straight into your client email.</p>
+      <div class="hero-cta">
+        <button class="btn-primary" onclick="showPage('signup')">Get Started Free</button>
+        <button class="btn-outline" onclick="showPage('login')">Sign In</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-num">~60s</div><div class="stat-label">Avg comparison time</div></div>
+        <div class="stat"><div class="stat-num">AI</div><div class="stat-label">Powered analysis</div></div>
+        <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Email-ready output</div></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="content-section">
+    <h2 class="section-title">Everything you need</h2>
+    <p class="section-sub">From PDF upload to client-ready email in minutes</p>
+    <div class="cards">
+      <div class="card"><div class="card-icon">&#128196;</div><h3>Upload Any PDF</h3><p>Drop in the old and new policy documents. AI reads and extracts all premium and cover data automatically.</p></div>
+      <div class="card"><div class="card-icon">&#129302;</div><h3>AI Analysis</h3><p>Compares every line item — premiums, sums insured, fees, Sasria — and shows exactly what changed and by how much.</p></div>
+      <div class="card"><div class="card-icon">&#128231;</div><h3>Copy to Email</h3><p>One click copies a professionally formatted table. Paste directly into Gmail or Outlook — it renders perfectly.</p></div>
+    </div>
+  </section>
+
+  <section class="content-section" style="padding-top:0">
+    <h2 class="section-title">How it works</h2>
+    <p class="section-sub">Three steps from PDF to client email</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><h3>Upload</h3><p>Select your old and renewal policy PDFs</p></div>
+      <div class="step"><div class="step-num">2</div><h3>Analyse</h3><p>AI compares every cover section and premium</p></div>
+      <div class="step"><div class="step-num">3</div><h3>Send</h3><p>Copy the formatted table into your client email</p></div>
+    </div>
+  </section>
+
+  <section class="content-section" style="padding-top:0" id="pricing-section">
+    <h2 class="section-title">Simple pricing</h2>
+    <p class="section-sub">Choose the plan that fits your practice</p>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-name">Starter</div>
+        <div class="price-amount">R1,000<span class="price-period">/mo</span></div>
+        <div class="price-limit">20 comparisons per month</div>
+        <ul class="price-features"><li>Full AI comparison</li><li>Email-ready HTML output</li><li>Usage dashboard</li><li>Email support</li></ul>
+      </div>
+      <div class="price-card featured">
+        <div class="price-badge">Most Popular</div>
+        <div class="price-name">Pro</div>
+        <div class="price-amount">R2,600<span class="price-period">/mo</span></div>
+        <div class="price-limit">60 comparisons per month</div>
+        <ul class="price-features"><li>Everything in Starter</li><li>Priority processing</li><li>Custom branding</li><li>Phone support</li></ul>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Enterprise</div>
+        <div class="price-amount">R5,800<span class="price-period">/mo</span></div>
+        <div class="price-limit">150 comparisons per month</div>
+        <ul class="price-features"><li>Everything in Pro</li><li>Team accounts</li><li>API access</li><li>Dedicated support</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <footer><span>&copy; 2026 RenewalScan AI &mdash; Built by <a href="https://TaskAutomateAI.co.za" target="_blank" style="color:inherit;text-decoration:underline;">TaskAutomateAI</a> &mdash; Managed by TaskAutomateAI.co.za</span></footer>
+</div>
+
+<!-- ═══════════════════════════════
+     LOGIN
+═══════════════════════════════ -->
+<div class="page page-auth" id="page-login">
+  <div class="auth-left">
+    <div class="auth-left-logo">RenewalScan<span>AI</span></div>
+    <h2>Compare policies in seconds</h2>
+    <p>The fastest way to analyse policy renewals and present clear breakdowns to your clients.</p>
+    <div class="auth-features">
+      <div class="auth-feature">
+        <div class="auth-feature-icon">&#9889;</div>
+        <div class="auth-feature-text"><strong>Instant AI analysis</strong><span>Full premium breakdown in under 2 minutes</span></div>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feature-icon">&#128203;</div>
+        <div class="auth-feature-text"><strong>Copy-ready for email</strong><span>Paste directly into Gmail or Outlook</span></div>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feature-icon">&#128274;</div>
+        <div class="auth-feature-text"><strong>Secure &amp; private</strong><span>Documents processed and discarded immediately</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <div class="auth-form-title">Welcome back</div>
+      <div class="auth-form-sub">Sign in to your account to continue</div>
+      <div class="method-select">
+        <button class="method-btn active" id="tab-email" onclick="switchLoginTab('email')">
+          <div class="method-btn-icon">&#9993;</div>
+          <div class="method-btn-label">Email</div>
+        </button>
+        <button class="method-btn" id="tab-phone" onclick="switchLoginTab('phone')">
+          <div class="method-btn-icon">&#128241;</div>
+          <div class="method-btn-label">Phone / SMS</div>
+        </button>
+      </div>
+      <div class="msg-error" id="err-login"></div>
+      <div id="login-email-panel">
+        <div class="form-group"><label>Email address</label><input type="email" id="l-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLoginEmail()" /></div>
+        <div class="form-group"><label>Password</label><input type="password" id="l-pass" placeholder="Your password" onkeydown="if(event.key==='Enter')doLoginEmail()" /></div>
+        <button class="btn-full" id="btn-login" onclick="doLoginEmail()">Sign in</button>
+        <div class="auth-link" style="margin-top:12px"><a onclick="doForgotPassword()">Forgot password?</a></div>
+      </div>
+      <div id="login-phone-panel" style="display:none">
+        <div id="recaptcha-container"></div>
+        <div class="form-group" id="ph-step1">
+          <label>Phone number</label>
+          <input type="tel" id="l-phone" placeholder="+27821234567" />
+          <div class="input-hint">Include country code &mdash; e.g. +27 for South Africa</div>
+        </div>
+        <button class="btn-full" id="btn-send-sms" onclick="doSendSms()">Send SMS Code</button>
+        <div id="ph-step2" style="display:none;margin-top:16px">
+          <div class="form-group">
+            <label>6-digit SMS code</label>
+            <input type="text" id="l-otp" placeholder="123456" maxlength="6" style="letter-spacing:6px;font-size:22px;text-align:center" onkeydown="if(event.key==='Enter')doVerifySms()" />
+          </div>
+          <button class="btn-full" onclick="doVerifySms()">Verify Code</button>
+        </div>
+      </div>
+      <div class="auth-link">Don't have an account? <a onclick="showPage('signup')">Sign up free</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     SIGN UP
+═══════════════════════════════ -->
+<div class="page page-auth" id="page-signup">
+  <div class="auth-left">
+    <div class="auth-left-logo">RenewalScan<span>AI</span></div>
+    <h2>Join advisors saving hours every week</h2>
+    <p>Stop manually comparing renewal documents. Let AI do the heavy lifting so you can focus on your clients.</p>
+    <div class="auth-features">
+      <div class="auth-feature">
+        <div class="auth-feature-icon">&#128200;</div>
+        <div class="auth-feature-text"><strong>Track monthly usage</strong><span>Dashboard shows your comparison activity</span></div>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feature-icon">&#127775;</div>
+        <div class="auth-feature-text"><strong>Professional output</strong><span>Polished tables your clients will trust</span></div>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feature-icon">&#128640;</div>
+        <div class="auth-feature-text"><strong>Up and running in minutes</strong><span>No training required &mdash; just upload and get results</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <div class="auth-form-title">Create your account</div>
+      <div class="auth-form-sub">Start comparing policies today &mdash; free to try</div>
+      <div class="msg-error" id="err-signup"></div>
+      <div class="form-group"><label>Full name</label><input type="text" id="s-name" placeholder="John Smith" /></div>
+      <div class="form-group"><label>Email address</label><input type="email" id="s-email" placeholder="you@example.com" /></div>
+      <div class="form-group"><label>Password</label><input type="password" id="s-pass" placeholder="At least 8 characters" onkeydown="if(event.key==='Enter')doSignUp()" /></div>
+      <button class="btn-full" id="btn-signup" onclick="doSignUp()">Create account</button>
+      <div class="auth-link">Already have an account? <a onclick="showPage('login')">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     VERIFY EMAIL
+═══════════════════════════════ -->
+<div class="page page-auth" id="page-verify">
+  <div class="auth-left">
+    <div class="auth-left-logo">RenewalScan<span>AI</span></div>
+    <h2>Almost there&hellip;</h2>
+    <p>We just need to confirm your email address before you can start comparing policies.</p>
+    <div class="auth-features">
+      <div class="auth-feature">
+        <div class="auth-feature-icon">&#128274;</div>
+        <div class="auth-feature-text"><strong>Why we verify</strong><span>Keeps your account secure and prevents unauthorised access</span></div>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feature-icon">&#9201;</div>
+        <div class="auth-feature-text"><strong>Takes 30 seconds</strong><span>Check your inbox and click the link we sent you</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap" style="text-align:center">
+      <div class="verify-icon-wrap">&#128231;</div>
+      <div class="auth-form-title">Check your email</div>
+      <p style="font-size:14px;color:var(--gray-600);margin:10px 0 28px;line-height:1.8">We sent a verification link to<br><strong id="verify-email" style="color:var(--navy)"></strong><br>Click the link to activate your account.</p>
+      <div class="msg-error" id="err-verify"></div>
+      <div class="msg-success" id="ok-verify"></div>
+      <button class="btn-full" onclick="doCheckVerify()" id="btn-check-verify">I've verified my email</button>
+      <button class="btn-secondary-full" onclick="doResendVerify()">Resend verification email</button>
+      <div class="auth-link"><a onclick="doSignOut();showPage('login')">Sign out</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     DASHBOARD
+═══════════════════════════════ -->
+<div class="page" id="page-dashboard">
+  <div class="dash-wrap">
+    <div class="dash-welcome">Welcome back, <span id="dash-name">there</span> &#128075;</div>
+    <div class="dash-sub">Here's your activity this month</div>
+    <div class="dash-grid">
+      <div class="dash-card">
+        <div class="dash-label">Comparisons this month</div>
+        <div class="dash-value" id="dash-count">0</div>
+        <div class="dash-card-sub">of <span id="dash-limit">&#8212;</span> included in your plan</div>
+        <div class="usage-bar-wrap"><div class="usage-bar" id="dash-bar" style="width:0%"></div></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-label">Current plan</div>
+        <div class="dash-value" style="font-size:22px;margin-top:4px" id="dash-tier">Starter</div>
+        <div class="dash-card-sub">Active</div>
+      </div>
+    </div>
+    <div class="dash-cta">
+      <div><h2>Ready to run a renewal comparison?</h2><p>Upload the old and new policy PDFs and get a full breakdown in minutes</p></div>
+      <button class="btn-white" onclick="showPage('compare')">Start Renewal Comparison &#8594;</button>
+    </div>
+
+    <div style="margin-top:28px">
+      <div style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px">Renewals Processed</div>
+      <div style="background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-200);overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="background:var(--navy)">
+              <th style="padding:11px 14px;text-align:left;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Client Name</th>
+              <th style="padding:11px 14px;text-align:left;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Date</th>
+              <th style="padding:11px 14px;text-align:right;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Duration</th>
+            </tr>
+          </thead>
+          <tbody id="renewals-tbody">
+            <tr><td colspan="3" style="text-align:center;padding:20px;color:var(--gray-400);font-style:italic">No comparisons yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     COMPARE
+═══════════════════════════════ -->
+<div class="page" id="page-compare">
+  <div class="compare-wrap">
+    <div class="compare-title">Renewal Comparison</div>
+    <div class="compare-sub">Upload the old and new renewal policy PDFs to begin your analysis</div>
+
+    <div class="progress-steps">
+      <div class="ps-step"><div class="ps-circle" id="ps1">1</div><div class="ps-label" id="pl1">Upload &amp; Extract</div></div>
+      <div class="ps-connector" id="pc1"></div>
+      <div class="ps-step"><div class="ps-circle" id="ps2">2</div><div class="ps-label" id="pl2">AI Analysis</div></div>
+      <div class="ps-connector" id="pc2"></div>
+      <div class="ps-step"><div class="ps-circle" id="ps3">3</div><div class="ps-label" id="pl3">Results</div></div>
+    </div>
+
+    <div id="upload-panel">
+      <div class="msg-error" id="err-compare"></div>
+      <div class="upload-grid">
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--navy);display:block;margin-bottom:8px">Old / Existing Policy</label>
+          <div class="upload-zone" id="zone-old" ondragover="onDragOver(event,'old')" ondragleave="onDragLeave('old')" ondrop="onDrop(event,'old')">
+            <input class="upload-input" type="file" id="file-old" accept=".pdf" onchange="onFileSelect('old')" />
+            <div class="upload-icon">&#128196;</div>
+            <div class="upload-label-text">Old Policy PDF</div>
+            <div class="upload-hint-text">Click to browse or drag &amp; drop</div>
+            <div class="upload-filename" id="fn-old"></div>
+          </div>
+          <div style="margin-top:10px;position:relative" id="pass-wrap-old">
+            <div id="pass-trigger-old" onclick="togglePassDropdown('old')" style="cursor:pointer;font-size:13px;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);width:100%;font-family:Inter,sans-serif;color:var(--gray-400);background:#fff;display:flex;align-items:center;justify-content:space-between;user-select:none">
+              <span id="pass-trigger-label-old">PDF password (if protected)</span>
+              <span style="font-size:10px;color:var(--gray-400)">▼</span>
+            </div>
+            <div id="pass-dropdown-old" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(15,39,68,.12);z-index:200;overflow:hidden">
+              <div id="pass-saved-list-old"></div>
+              <div style="padding:8px">
+                <input type="password" id="pass-old" placeholder="Enter new password…" style="font-size:13px;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:6px;width:100%;font-family:Inter,sans-serif;outline:none;color:var(--gray-700)" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="onPassInput('old')" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--navy);display:block;margin-bottom:8px">New / Renewal Policy</label>
+          <div class="upload-zone" id="zone-new" ondragover="onDragOver(event,'new')" ondragleave="onDragLeave('new')" ondrop="onDrop(event,'new')">
+            <input class="upload-input" type="file" id="file-new" accept=".pdf" onchange="onFileSelect('new')" />
+            <div class="upload-icon">&#128196;</div>
+            <div class="upload-label-text">New Policy PDF</div>
+            <div class="upload-hint-text">Click to browse or drag &amp; drop</div>
+            <div class="upload-filename" id="fn-new"></div>
+          </div>
+          <div style="margin-top:10px;position:relative" id="pass-wrap-new">
+            <div id="pass-trigger-new" onclick="togglePassDropdown('new')" style="cursor:pointer;font-size:13px;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);width:100%;font-family:Inter,sans-serif;color:var(--gray-400);background:#fff;display:flex;align-items:center;justify-content:space-between;user-select:none">
+              <span id="pass-trigger-label-new">PDF password (if protected)</span>
+              <span style="font-size:10px;color:var(--gray-400)">▼</span>
+            </div>
+            <div id="pass-dropdown-new" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(15,39,68,.12);z-index:200;overflow:hidden">
+              <div id="pass-saved-list-new"></div>
+              <div style="padding:8px">
+                <input type="password" id="pass-new" placeholder="Enter new password…" style="font-size:13px;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:6px;width:100%;font-family:Inter,sans-serif;outline:none;color:var(--gray-700)" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="onPassInput('new')" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;position:relative" id="notes-wrap">
+        <label style="font-size:13px;font-weight:600;color:var(--navy);display:block;margin-bottom:6px">Additional Notes <span style="font-weight:400;color:var(--gray-400)">(optional)</span></label>
+        <textarea id="comparison-notes" placeholder="Type notes to include below the comparison in the email…" style="width:100%;font-size:13px;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter,sans-serif;color:var(--gray-700);resize:vertical;min-height:80px;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="renderSavedNotesList()"></textarea>
+        <div id="notes-saved-list" style="display:none;position:absolute;left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(15,39,68,.12);z-index:200;max-height:180px;overflow-y:auto;margin-top:4px"></div>
+      </div>
+      <button class="btn-compare" id="btn-compare" onclick="runComparison()" disabled>Analyse Renewal</button>
+    </div>
+
+    <div class="processing" id="proc-panel">
+      <div class="spinner"></div>
+      <div class="proc-text" id="proc-text">Extracting text from PDFs...</div>
+      <div class="proc-sub" id="proc-sub">Reading policy documents</div>
+    </div>
+
+    <div class="results" id="results-panel">
+      <div class="results-hdr">
+        <div class="results-title">Comparison Results</div>
+        <div class="results-actions">
+          <button class="btn-copy" id="btn-copy" onclick="doCopyHtml()">&#128203; Copy HTML for Email</button>
+          <button class="btn-reset" onclick="resetCompare()">&#8635; New Comparison</button>
+        </div>
+      </div>
+      <div id="results-output"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     SCRIPTS
+═══════════════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
+  import {
+    getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+    sendEmailVerification, sendPasswordResetEmail, signOut as fbSignOut,
+    onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber
+  } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+  import {
+    getFirestore, doc, getDoc, setDoc, increment, serverTimestamp
+  } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+
+  // ─────────────────────────────────────────────────────────────
+  // FIREBASE CONFIG
+  // Replace these values with your Firebase project config.
+  // Go to: https://console.firebase.google.com
+  //   → Your project → Project settings → Your apps → Web app → Config
+  // ─────────────────────────────────────────────────────────────
+  const firebaseConfig = {
+    apiKey:            "AIzaSyCB-Eh0I6F-ZFMbaefowMn7X3sabrGs8YA",
+    authDomain:        "renewalscan-ai.firebaseapp.com",
+    projectId:         "renewalscan-ai",
+    storageBucket:     "renewalscan-ai.firebasestorage.app",
+    messagingSenderId: "861955607969",
+    appId:             "1:861955607969:web:dd2274e24a87fec5330fe0"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  let currentUser    = null;
+  let smsConfirm     = null;
+  let htmlToCopy     = '';
+  let currentPage    = 'landing';
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  // ── Auth state ──────────────────────────────────────────────
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // Always reload from server so emailVerified is never stale
+      try { await user.reload(); } catch(e) {}
+      const freshUser = auth.currentUser;
+      currentUser = freshUser;
+      const isEmailProvider = freshUser.providerData.some(p => p.providerId === 'password');
+      const needsVerify = isEmailProvider && !freshUser.emailVerified;
+      if (needsVerify) {
+        document.getElementById('verify-email').textContent = freshUser.email;
+        setNav(true, freshUser.email);
+        showPage('verify'); return;
+      }
+      const name = await getUserName(freshUser);
+      setNav(true, name);
+      await loadDashboard(freshUser);
+      if (!['dashboard','compare','verify'].includes(currentPage)) showPage('dashboard');
+    } else {
+      currentUser = null;
+      setNav(false);
+      if (!['landing','login','signup','verify'].includes(currentPage)) showPage('landing');
+    }
+  });
+
+  async function getUserName(user) {
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      return snap.exists() ? (snap.data().name || user.email.split('@')[0]) : user.email.split('@')[0];
+    } catch { return user.email.split('@')[0]; }
+  }
+
+  function setNav(loggedIn, name) {
+    document.getElementById('nav-public').style.display  = loggedIn ? 'none' : 'flex';
+    document.getElementById('nav-private').style.display = loggedIn ? 'flex' : 'none';
+    if (name) document.getElementById('nav-name').textContent = name;
+  }
+
+  async function loadDashboard(user) {
+    try {
+      const month   = new Date().toISOString().slice(0,7);
+      const [uSnap, pSnap] = await Promise.all([
+        getDoc(doc(db, 'usage', user.uid, 'months', month)),
+        getDoc(doc(db, 'users', user.uid))
+      ]);
+      const count  = uSnap.exists() ? (uSnap.data().count || 0) : 0;
+      const pdata  = pSnap.exists() ? pSnap.data() : {};
+      const name   = pdata.name || user.displayName || user.email.split('@')[0];
+      const tier   = pdata.tier || 'starter';
+      const limit  = pdata.monthlyLimit || 20;
+      document.getElementById('dash-name').textContent  = name;
+      document.getElementById('dash-count').textContent = count;
+      document.getElementById('dash-limit').textContent = limit;
+      document.getElementById('dash-tier').textContent  = tier.charAt(0).toUpperCase() + tier.slice(1);
+      document.getElementById('dash-bar').style.width   = Math.min(100, Math.round(count/limit*100)) + '%';
+      loadRenewals();
+    } catch(e) { console.warn('Dashboard load failed', e); }
+  }
+
+  function renewalsKey() {
+    return currentUser ? 'renewals_' + currentUser.uid : 'renewals_guest';
+  }
+  function saveRenewalRecord(clientName, durationSecs) {
+    try {
+      const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
+      list.unshift({ clientName, durationSecs, completedAt: new Date().toISOString() });
+      if (list.length > 50) list.length = 50;
+      localStorage.setItem(renewalsKey(), JSON.stringify(list));
+    } catch(e) { console.warn('Failed to save renewal record', e); }
+  }
+  function loadRenewals() {
+    try {
+      const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
+      const tbody = g('renewals-tbody');
+      if (!tbody) return;
+      if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--gray-400);font-style:italic">No comparisons yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(r => {
+        const date = r.completedAt ? new Date(r.completedAt).toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+        const dur = r.durationSecs ? (r.durationSecs >= 60 ? Math.floor(r.durationSecs/60) + 'm ' + (r.durationSecs%60) + 's' : r.durationSecs + 's') : '—';
+        return `<tr>
+          <td style="padding:11px 14px;font-size:13px;font-weight:600;color:var(--navy);border-bottom:1px solid var(--gray-100)">${r.clientName||'—'}</td>
+          <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100)">${date}</td>
+          <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100);text-align:right">${dur}</td>
+        </tr>`;
+      }).join('');
+    } catch(e) { console.warn('Failed to load renewals', e); }
+  }
+
+  async function addUsage(uid) {
+    try {
+      const month = new Date().toISOString().slice(0,7);
+      await setDoc(doc(db, 'usage', uid, 'months', month), { count: increment(1) }, { merge: true });
+    } catch(e) { console.warn('Usage tracking error', e); }
+  }
+
+  // ── Login: email ─────────────────────────────────────────────
+  window.doLoginEmail = async function() {
+    const email = g('l-email').value.trim();
+    const pass  = g('l-pass').value;
+    const btn   = g('btn-login');
+    clearErr('err-login');
+    if (!email || !pass) { showErr('err-login', 'Please enter your email and password.'); return; }
+    btn.disabled = true; btn.textContent = 'Signing in...';
+    try { await signInWithEmailAndPassword(auth, email, pass); }
+    catch(e) { showErr('err-login', authErr(e.code)); btn.disabled=false; btn.textContent='Sign in'; }
+  };
+
+  // ── Login: phone SMS ─────────────────────────────────────────
+  window.doSendSms = async function() {
+    const phone = g('l-phone').value.trim();
+    const btn   = g('btn-send-sms');
+    clearErr('err-login');
+    if (!phone) { showErr('err-login', 'Please enter your phone number.'); return; }
+    btn.disabled = true; btn.textContent = 'Sending...';
+    try {
+      if (!window._rcv) {
+        window._rcv = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+      }
+      smsConfirm = await signInWithPhoneNumber(auth, phone, window._rcv);
+      g('ph-step2').style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Resend SMS';
+    } catch(e) {
+      showErr('err-login', authErr(e.code) || e.message);
+      btn.disabled = false; btn.textContent = 'Send SMS Code';
+    }
+  };
+
+  window.doVerifySms = async function() {
+    const code = g('l-otp').value.trim();
+    clearErr('err-login');
+    if (!code) { showErr('err-login', 'Please enter the 6-digit code.'); return; }
+    try { await smsConfirm.confirm(code); }
+    catch(e) { showErr('err-login', 'Invalid code. Please try again.'); }
+  };
+
+  window.switchLoginTab = function(tab) {
+    g('tab-email').className = 'method-btn' + (tab==='email'?' active':'');
+    g('tab-phone').className = 'method-btn' + (tab==='phone'?' active':'');
+    g('login-email-panel').style.display = tab==='email' ? 'block' : 'none';
+    g('login-phone-panel').style.display = tab==='phone' ? 'block' : 'none';
+    clearErr('err-login');
+  };
+
+  window.doForgotPassword = async function() {
+    const email = g('l-email').value.trim();
+    if (!email) { showErr('err-login', 'Enter your email address first, then click Forgot password.'); return; }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      const el = g('err-login');
+      el.style.cssText = 'background:#f0fdf4;border-color:#86efac;color:#16a34a;display:block';
+      el.textContent = 'Password reset email sent! Check your inbox.';
+    } catch(e) { showErr('err-login', authErr(e.code)); }
+  };
+
+  // ── Sign Up ──────────────────────────────────────────────────
+  window.doSignUp = async function() {
+    const name  = g('s-name').value.trim();
+    const email = g('s-email').value.trim();
+    const pass  = g('s-pass').value;
+    const btn   = g('btn-signup');
+    clearErr('err-signup');
+    if (!name||!email||!pass) { showErr('err-signup', 'Please fill in all fields.'); return; }
+    if (pass.length < 8) { showErr('err-signup', 'Password must be at least 8 characters.'); return; }
+    btn.disabled = true; btn.textContent = 'Creating account...';
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      await sendEmailVerification(cred.user);
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        name, email, tier: 'starter', monthlyLimit: 20, createdAt: serverTimestamp()
+      });
+      g('verify-email').textContent = email;
+      showPage('verify');
+    } catch(e) { showErr('err-signup', authErr(e.code)); btn.disabled=false; btn.textContent='Create account'; }
+  };
+
+  // ── Verify Email ─────────────────────────────────────────────
+  window.doCheckVerify = async function() {
+    const btn = g('btn-check-verify');
+    clearErr('err-verify'); clearOk('ok-verify');
+    btn.disabled = true; btn.textContent = 'Checking...';
+    try {
+      await auth.currentUser.reload();
+      if (auth.currentUser.emailVerified) {
+        await loadDashboard(auth.currentUser);
+        showPage('dashboard');
+      } else {
+        showErr('err-verify', 'Email not verified yet. Click the link in your email first.');
+        btn.disabled = false; btn.textContent = "I've verified my email";
+      }
+    } catch(e) { showErr('err-verify', e.message); btn.disabled=false; btn.textContent="I've verified my email"; }
+  };
+
+  window.doResendVerify = async function() {
+    try {
+      await sendEmailVerification(auth.currentUser);
+      showOk('ok-verify', 'Verification email sent! Check your inbox.');
+    } catch(e) { showErr('err-verify', e.message); }
+  };
+
+  // ── Sign Out ─────────────────────────────────────────────────
+  window.doSignOut = async function() { await fbSignOut(auth); showPage('landing'); };
+
+  // ── PDF Extraction ───────────────────────────────────────────
+  async function extractPdf(file, password) {
+    const buf = await file.arrayBuffer();
+    const loadParams = { data: buf };
+    if (password) loadParams.password = password;
+    try {
+      const pdf = await pdfjsLib.getDocument(loadParams).promise;
+      let text = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page    = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(it => it.str).join(' ') + '\n';
+      }
+      return text.trim();
+    } catch(e) {
+      if (e.name === 'PasswordException' || e.message?.includes('password')) {
+        throw new Error('Incorrect PDF password for "' + file.name + '". Please check and try again.');
+      }
+      throw e;
+    }
+  }
+
+  window.onFileSelect = function(w) {
+    const f = g('file-' + w).files[0];
+    if (!f) return;
+    g('zone-' + w).classList.add('loaded');
+    g('fn-' + w).textContent = '\u2713 ' + f.name;
+    checkFiles();
+  };
+  window.onDragOver  = (e,w) => { e.preventDefault(); g('zone-'+w).classList.add('drag-over'); };
+  window.onDragLeave = (w)   => g('zone-'+w).classList.remove('drag-over');
+  window.onDrop      = (e,w) => {
+    e.preventDefault(); g('zone-'+w).classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (!f || f.type !== 'application/pdf') return;
+    const dt = new DataTransfer(); dt.items.add(f);
+    g('file-'+w).files = dt.files; window.onFileSelect(w);
+  };
+  function checkFiles() {
+    const ok = g('file-old').files[0] && g('file-new').files[0];
+    g('btn-compare').disabled = !ok;
+  }
+
+  // ── Run Comparison ───────────────────────────────────────────
+  window.runComparison = async function() {
+    if (!currentUser) { showPage('login'); return; }
+    const oldFile = g('file-old').files[0];
+    const newFile = g('file-new').files[0];
+    clearErr('err-compare');
+    g('upload-panel').style.display = 'none';
+    g('proc-panel').classList.add('show');
+    g('results-panel').classList.remove('show');
+    setStep(1,'active');
+    const startTime = Date.now();
+
+    try {
+      // Step 1
+      setProc('Extracting text from PDFs...', 'Reading policy documents');
+      const oldPass = g('pass-old').value || '';
+      const newPass = g('pass-new').value || '';
+      const [oldText, newText] = await Promise.all([extractPdf(oldFile, oldPass), extractPdf(newFile, newPass)]);
+      if (!oldText) throw new Error('Could not extract text from the old policy PDF. The file may be image-based.');
+      if (!newText) throw new Error('Could not extract text from the new policy PDF. The file may be image-based.');
+      setStep(1,'done'); setStep(2,'active');
+
+      // Step 2
+      setProc('Analysing policies with AI...', 'This usually takes 30\u201360 seconds');
+      const token = await currentUser.getIdToken();
+      const notes = g('comparison-notes').value.trim();
+      const resp  = await fetch('/api/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ oldPolicyText: oldText, newPolicyText: newText, notes })
+      });
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || 'Processing failed. Please try again.');
+      setStep(2,'done'); setStep(3,'active');
+
+      // Step 3
+      setProc('Building your report...', 'Almost done');
+      htmlToCopy = result.htmlBody || '';
+      await sleep(600);
+      setStep(3,'done');
+      await addUsage(currentUser.uid);
+      if (oldPass) savePassword(oldPass);
+      if (newPass) savePassword(newPass);
+      const notes = g('comparison-notes').value.trim();
+      if (notes) saveNote(notes);
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      saveRenewalRecord(result.data?.clientName || 'Unknown Client', elapsed);
+      renderResults(result.data);
+      g('proc-panel').classList.remove('show');
+      g('results-panel').classList.add('show');
+
+    } catch(e) {
+      g('proc-panel').classList.remove('show');
+      g('upload-panel').style.display = 'block';
+      showErr('err-compare', e.message || 'An unexpected error occurred. Please try again.');
+      resetSteps();
+    }
+  };
+
+  function setStep(n, state) {
+    const c  = g('ps'+n), l = g('pl'+n), conn = g('pc'+n);
+    c.className = 'ps-circle' + (state?' '+state:'');
+    l.className = 'ps-label'  + (state?' '+state:'');
+    if (conn) conn.className = 'ps-connector' + (state==='done'?' done':'');
+    c.textContent = state==='done' ? '\u2713' : n;
+  }
+  function resetSteps() { [1,2,3].forEach(n => setStep(n,'')); }
+  function setProc(main, sub) { g('proc-text').textContent=main; g('proc-sub').textContent=sub; }
+  const sleep = ms => new Promise(r => setTimeout(r,ms));
+
+  // ── Render Results ───────────────────────────────────────────
+  function renderResults(d) {
+    if (!d) { g('results-output').innerHTML = '<p style="color:var(--gray-600)">No data returned.</p>'; return; }
+    const inc   = d.totalDirection === 'increase';
+    const arrow = inc ? '&#9650;' : '&#9660;';
+    const clr   = inc ? '#dc2626' : '#059669';
+
+    let rows = '';
+    if (!d.changes || d.changes.length === 0) {
+      rows = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--gray-600);font-style:italic">No premium changes found.</td></tr>';
+    } else {
+      d.changes.forEach(c => {
+        const up   = c.difference > 0.01;
+        const none = Math.abs(c.difference) < 0.01;
+        const cc   = none ? '#94a3b8' : (up ? '#dc2626' : '#059669');
+        const ar   = up ? '&#9650;' : '&#9660;';
+        rows += `<tr>
+          <td style="font-weight:600">${c.item}</td>
+          <td>${c.oldPriceFormatted||'R0.00'}</td>
+          <td>${c.newPriceFormatted||'R0.00'}</td>
+          <td><span style="color:${cc};font-weight:700">${none?'&mdash;':ar+' '+c.differenceFormatted}</span></td>
+        </tr>`;
+      });
+    }
+
+    let bdHtml = '';
+    const nb = d.newBreakdown, ob = d.oldBreakdown;
+    if (nb || ob) {
+      const br = (label,nv,ov) => (nv||ov) ? `<tr><td>${label}</td><td style="color:#059669;font-weight:600;text-align:right">${nv||'&mdash;'}</td><td style="color:#d97706;font-weight:600;text-align:right">${ov||'&mdash;'}</td></tr>` : '';
+      bdHtml = `<div style="margin-top:20px">
+        <div class="sect-title">Premium Breakdown</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:var(--gray-50)">
+            <th style="padding:10px;text-align:left;font-weight:700;color:var(--gray-600);border-bottom:2px solid var(--gray-200)">Component</th>
+            <th style="padding:10px;text-align:right;font-weight:700;color:#059669;border-bottom:2px solid var(--gray-200)">New</th>
+            <th style="padding:10px;text-align:right;font-weight:700;color:#d97706;border-bottom:2px solid var(--gray-200)">Previous</th>
+          </tr></thead>
+          <tbody>
+            ${br('Policy Premium',nb?.policyPremium,ob?.policyPremium)}
+            ${br('Fees (Intermediary)',nb?.fees,ob?.fees)}
+            ${br('Sasria',nb?.sasria,ob?.sasria)}
+            ${br('VAS',nb?.vas,ob?.vas)}
+            <tr style="background:var(--gray-50);border-top:2px solid var(--gray-200)">
+              <td style="padding:10px;font-weight:700;color:var(--navy)">Total</td>
+              <td style="padding:10px;font-weight:700;color:#059669;text-align:right">${nb?.total||d.newTotalFormatted}</td>
+              <td style="padding:10px;font-weight:700;color:#d97706;text-align:right">${ob?.total||d.oldTotalFormatted}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+    }
+
+    g('results-output').innerHTML = `
+      <div class="result-box">
+        <div class="result-head">
+          <div class="result-client">${d.clientName||'Policy Comparison'}</div>
+          <div class="result-period">${d.oldPolicyPeriod} &rarr; ${d.newPolicyPeriod}</div>
+        </div>
+        <div class="result-body">
+          <div class="totals-row">
+            <div class="total-box old"><div class="total-box-label">Previous Premium</div><div class="total-box-amount">${d.oldTotalFormatted}</div></div>
+            <div class="total-box new"><div class="total-box-label">New Premium</div><div class="total-box-amount">${d.newTotalFormatted}</div></div>
+          </div>
+          <div class="change-banner ${inc?'inc':'dec'}">
+            <span class="cb-text">${arrow} Overall Change: ${d.totalDifferenceFormatted} (${inc?'Increase':'Decrease'})</span>
+          </div>
+          <div class="sect-title">Cover Items with Changes</div>
+          <table class="changes-tbl">
+            <thead><tr><th>Cover Item</th><th style="text-align:right">Previous</th><th style="text-align:right">New</th><th style="text-align:right">Change</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          ${bdHtml}
+        </div>
+      </div>`;
+  }
+
+  // ── Copy HTML ────────────────────────────────────────────────
+  window.doCopyHtml = async function() {
+    if (!htmlToCopy) return;
+    const btn = g('btn-copy');
+    try {
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html':  new Blob([htmlToCopy], { type:'text/html' }),
+        'text/plain': new Blob([htmlToCopy.replace(/<[^>]+>/g,'')], { type:'text/plain' })
+      })]);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = htmlToCopy; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    btn.textContent = '\u2713 Copied!'; btn.classList.add('copied');
+    const t = g('toast'); t.classList.add('show');
+    setTimeout(() => { btn.textContent='\uD83D\uDCCB Copy HTML for Email'; btn.classList.remove('copied'); t.classList.remove('show'); }, 3000);
+  };
+
+  window.resetCompare = function() {
+    htmlToCopy = '';
+    ['old','new'].forEach(w => {
+      g('zone-'+w).classList.remove('loaded');
+      g('fn-'+w).textContent = '';
+      g('file-'+w).value = '';
+      g('pass-'+w).value = '';
+    });
+    g('btn-compare').disabled = true;
+    g('comparison-notes').value = '';
+    const nl = g('notes-saved-list'); if (nl) nl.style.display = 'none';
+    clearErr('err-compare');
+    g('results-panel').classList.remove('show');
+    g('upload-panel').style.display = 'block';
+    resetSteps();
+  };
+
+  // ── Page navigation ──────────────────────────────────────────
+  window.showPage = function(page) {
+    // Hard gate — unverified email users cannot access protected pages
+    if (['dashboard','compare'].includes(page) && currentUser) {
+      const isEmailProvider = currentUser.providerData.some(p => p.providerId === 'password');
+      if (isEmailProvider && !currentUser.emailVerified) { page = 'verify'; }
+    }
+    // Hard gate — logged-out users cannot access protected pages
+    if (['dashboard','compare'].includes(page) && !currentUser) { page = 'login'; }
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const el = document.getElementById('page-' + page);
+    if (el) { el.classList.add('active'); currentPage = page; window.scrollTo(0,0); }
+    if (page === 'dashboard') loadRenewals();
+  };
+
+  window.scrollToPricing = function() {
+    showPage('landing');
+    setTimeout(() => document.getElementById('pricing-section')?.scrollIntoView({behavior:'smooth'}), 100);
+  };
+
+  // ── Utilities ────────────────────────────────────────────────
+  const g = id => document.getElementById(id);
+  function showErr(id, msg) { const el=g(id); el.textContent=msg; el.className='msg-error show'; }
+  function clearErr(id) { g(id).className='msg-error'; }
+  function showOk(id, msg) { const el=g(id); el.textContent=msg; el.className='msg-success show'; }
+  function clearOk(id) { g(id).className='msg-success'; }
+
+  // ── PDF Password Manager ─────────────────────────────────────
+  function passStorageKey() {
+    return currentUser ? 'pdfpasses_' + currentUser.uid : 'pdfpasses_guest';
+  }
+  function getSavedPasswords() {
+    try { return JSON.parse(localStorage.getItem(passStorageKey()) || '[]'); } catch { return []; }
+  }
+  function savePassword(pw) {
+    if (!pw) return;
+    let list = getSavedPasswords();
+    if (list.includes(pw)) return; // already saved
+    list.unshift(pw);
+    if (list.length > 20) list = list.slice(0, 20); // cap at 20
+    localStorage.setItem(passStorageKey(), JSON.stringify(list));
+  }
+  function deletePassword(pw) {
+    let list = getSavedPasswords().filter(p => p !== pw);
+    localStorage.setItem(passStorageKey(), JSON.stringify(list));
+  }
+
+  function renderPassList(which) {
+    const list = getSavedPasswords();
+    const container = g('pass-saved-list-' + which);
+    if (!list.length) { container.innerHTML = ''; return; }
+    container.innerHTML = list.map((pw, i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--gray-100);font-size:13px;color:var(--gray-700);background:#fff;transition:background .1s"
+           onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
+        <span onclick="selectSavedPass('${which}','${pw.replace(/'/g,"\\'")}')">
+          ${pw}
+        </span>
+        <span onclick="deleteSavedPass(event,'${which}','${pw.replace(/'/g,"\\'")}',${i})"
+              style="color:var(--gray-400);font-size:14px;padding:2px 6px;border-radius:4px;cursor:pointer;line-height:1"
+              onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--gray-400)'"
+              title="Delete this saved password">&#10005;</span>
+      </div>`).join('');
+  }
+
+  window.togglePassDropdown = function(which) {
+    const dd = g('pass-dropdown-' + which);
+    const isOpen = dd.style.display !== 'none';
+    // close both first
+    ['old','new'].forEach(w => { g('pass-dropdown-' + w).style.display = 'none'; });
+    if (!isOpen) {
+      renderPassList(which);
+      dd.style.display = 'block';
+      setTimeout(() => g('pass-' + which).focus(), 50);
+    }
+  };
+
+  window.selectSavedPass = function(which, pw) {
+    g('pass-' + which).value = pw;
+    const label = g('pass-trigger-label-' + which);
+    label.textContent = pw;
+    label.style.color = 'var(--gray-700)';
+    g('pass-dropdown-' + which).style.display = 'none';
+  };
+
+  window.deleteSavedPass = function(e, which, pw, idx) {
+    e.stopPropagation();
+    deletePassword(pw);
+    ['old','new'].forEach(w => {
+      const input = g('pass-' + w);
+      const label = g('pass-trigger-label-' + w);
+      if (input.value === pw) {
+        input.value = '';
+        label.textContent = 'PDF password (if protected)';
+        label.style.color = '';
+      }
+    });
+    renderPassList(which);
+  };
+
+  window.onPassInput = function(which) {
+    const val = g('pass-' + which).value;
+    const label = g('pass-trigger-label-' + which);
+    if (val) {
+      label.textContent = val;
+      label.style.color = 'var(--gray-700)';
+    } else {
+      label.textContent = 'PDF password (if protected)';
+      label.style.color = '';
+    }
+  };
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', (e) => {
+    ['old','new'].forEach(w => {
+      const wrap = g('pass-wrap-' + w);
+      if (wrap && !wrap.contains(e.target)) {
+        g('pass-dropdown-' + w).style.display = 'none';
+      }
+    });
+    const notesWrap = g('notes-wrap');
+    if (notesWrap && !notesWrap.contains(e.target)) {
+      const nl = g('notes-saved-list');
+      if (nl) nl.style.display = 'none';
+    }
+  });
+
+  // ── Notes Manager ─────────────────────────────────────────────
+  function notesStorageKey() {
+    return currentUser ? 'pdfnotes_' + currentUser.uid : 'pdfnotes_guest';
+  }
+  function getSavedNotes() {
+    try { return JSON.parse(localStorage.getItem(notesStorageKey()) || '[]'); } catch { return []; }
+  }
+  function saveNote(note) {
+    if (!note) return;
+    let list = getSavedNotes();
+    if (list.includes(note)) return;
+    list.unshift(note);
+    if (list.length > 20) list = list.slice(0, 20);
+    localStorage.setItem(notesStorageKey(), JSON.stringify(list));
+  }
+  function deleteNote(note) {
+    let list = getSavedNotes().filter(n => n !== note);
+    localStorage.setItem(notesStorageKey(), JSON.stringify(list));
+  }
+
+  window.renderSavedNotesList = function() {
+    const list = getSavedNotes();
+    const container = g('notes-saved-list');
+    if (!container) return;
+    if (!list.length) { container.style.display = 'none'; return; }
+    container.style.display = 'block';
+    container.innerHTML = list.map((note, i) => {
+      const preview = note.length > 80 ? note.slice(0, 80) + '…' : note;
+      const safe = note.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--gray-100);font-size:13px;color:var(--gray-700);background:#fff;transition:background .1s;gap:8px"
+           onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
+        <span style="cursor:pointer;flex:1;line-height:1.4" onclick="selectSavedNote('${safe}')">${preview}</span>
+        <span onclick="deleteSavedNote(event,'${safe}')"
+              style="color:var(--gray-400);font-size:14px;padding:2px 6px;border-radius:4px;cursor:pointer;flex-shrink:0"
+              onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--gray-400)'"
+              title="Delete this saved note">&#10005;</span>
+      </div>`;
+    }).join('');
+  };
+
+  window.selectSavedNote = function(note) {
+    g('comparison-notes').value = note;
+    g('notes-saved-list').style.display = 'none';
+  };
+
+  window.deleteSavedNote = function(e, note) {
+    e.stopPropagation();
+    deleteNote(note);
+    if (g('comparison-notes').value === note) g('comparison-notes').value = '';
+    renderSavedNotesList();
+  };
+
+  // Show saved notes list when textarea is focused
+  document.addEventListener('DOMContentLoaded', () => {
+    const ta = g('comparison-notes');
+    if (ta) ta.addEventListener('focus', renderSavedNotesList);
+  });
+
+  // ── Renewals History ──────────────────────────────────────────
+  function renewalsKey() {
+    return currentUser ? 'renewals_' + currentUser.uid : 'renewals_guest';
+  }
+  function saveRenewalRecord(clientName, durationSecs) {
+    try {
+      const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
+      list.unshift({ clientName, durationSecs, completedAt: new Date().toISOString() });
+      if (list.length > 50) list.length = 50;
+      localStorage.setItem(renewalsKey(), JSON.stringify(list));
+    } catch(e) { console.warn('Failed to save renewal record', e); }
+  }
+  function loadRenewals() {
+    try {
+      const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
+      const tbody = g('renewals-tbody');
+      if (!tbody) return;
+      if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--gray-400);font-style:italic">No comparisons yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(r => {
+        const date = r.completedAt ? new Date(r.completedAt).toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+        const dur = r.durationSecs ? (r.durationSecs >= 60 ? Math.floor(r.durationSecs/60) + 'm ' + (r.durationSecs%60) + 's' : r.durationSecs + 's') : '—';
+        return `<tr>
+          <td style="padding:11px 14px;font-size:13px;font-weight:600;color:var(--navy);border-bottom:1px solid var(--gray-100)">${r.clientName||'—'}</td>
+          <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100)">${date}</td>
+          <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100);text-align:right">${dur}</td>
+        </tr>`;
+      }).join('');
+    } catch(e) { console.warn('Failed to load renewals', e); }
+  }
+
+  function authErr(code) {
+    const m = {
+      'auth/user-not-found':             'No account found with that email.',
+      'auth/wrong-password':             'Incorrect password.',
+      'auth/invalid-credential':         'Incorrect email or password.',
+      'auth/email-already-in-use':       'An account with that email already exists.',
+      'auth/weak-password':              'Password is too weak. Use at least 8 characters.',
+      'auth/invalid-email':              'Please enter a valid email address.',
+      'auth/too-many-requests':          'Too many attempts. Please try again later.',
+      'auth/invalid-phone-number':       'Enter a valid phone number with country code, e.g. +27821234567.',
+      'auth/code-expired':               'SMS code expired. Request a new one.',
+      'auth/invalid-verification-code':  'Incorrect SMS code.',
+    };
+    return m[code] || 'Something went wrong. Please try again.';
+  }
+</script>
+</body>
+</html>
