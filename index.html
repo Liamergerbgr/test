@@ -1250,38 +1250,6 @@
     if (ta) ta.addEventListener('focus', renderSavedNotesList);
   });
 
-  // ── Renewals History ──────────────────────────────────────────
-  function renewalsKey() {
-    return currentUser ? 'renewals_' + currentUser.uid : 'renewals_guest';
-  }
-  function saveRenewalRecord(clientName, durationSecs) {
-    try {
-      const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
-      list.unshift({ clientName, durationSecs, completedAt: new Date().toISOString() });
-      if (list.length > 50) list.length = 50;
-      localStorage.setItem(renewalsKey(), JSON.stringify(list));
-    } catch(e) { console.warn('Failed to save renewal record', e); }
-  }
-  function loadRenewals() {
-    try {
-      const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
-      const tbody = g('renewals-tbody');
-      if (!tbody) return;
-      if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--gray-400);font-style:italic">No comparisons yet.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = list.map(r => {
-        const date = r.completedAt ? new Date(r.completedAt).toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
-        const dur = r.durationSecs ? (r.durationSecs >= 60 ? Math.floor(r.durationSecs/60) + 'm ' + (r.durationSecs%60) + 's' : r.durationSecs + 's') : '—';
-        return `<tr>
-          <td style="padding:11px 14px;font-size:13px;font-weight:600;color:var(--navy);border-bottom:1px solid var(--gray-100)">${r.clientName||'—'}</td>
-          <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100)">${date}</td>
-          <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100);text-align:right">${dur}</td>
-        </tr>`;
-      }).join('');
-    } catch(e) { console.warn('Failed to load renewals', e); }
-  }
 
   function authErr(code) {
     const m = {
