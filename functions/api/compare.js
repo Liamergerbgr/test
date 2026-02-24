@@ -14,7 +14,7 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({ error: 'oldPolicyText and newPolicyText are required' }), { status: 400 });
   }
 
-  if (oldPolicyText.length > 200000 || newPolicyText.length > 200000) {
+  if (oldPolicyText.length > 500000 || newPolicyText.length > 500000) {
     return new Response(JSON.stringify({ error: 'PDF text too large. Please use smaller documents.' }), { status: 400 });
   }
 
