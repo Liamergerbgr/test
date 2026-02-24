@@ -961,20 +961,29 @@
     const arrow = inc ? '&#9650;' : '&#9660;';
     const clr   = inc ? '#dc2626' : '#059669';
 
+    const anyHasSI = d.changes && d.changes.some(c => c.hasInsuredAmount);
+
     let rows = '';
     if (!d.changes || d.changes.length === 0) {
-      rows = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--gray-600);font-style:italic">No premium changes found.</td></tr>';
+      rows = `<tr><td colspan="${anyHasSI?6:4}" style="text-align:center;padding:20px;color:var(--gray-600);font-style:italic">No premium changes found.</td></tr>`;
     } else {
       d.changes.forEach(c => {
         const up   = c.difference > 0.01;
         const none = Math.abs(c.difference) < 0.01;
         const cc   = none ? '#94a3b8' : (up ? '#dc2626' : '#059669');
         const ar   = up ? '&#9650;' : '&#9660;';
+        const siChanged = c.insuredAmountChanged;
+        const siUp      = c.insuredAmountIncreased;
+        const siColor   = siChanged ? (siUp ? '#dc2626' : '#059669') : 'var(--gray-700)';
+        const siArrow   = siChanged ? (siUp ? ' &#9650;' : ' &#9660;') : '';
+        const siOld     = anyHasSI ? `<td style="text-align:right;color:var(--gray-600)">${c.oldInsuredAmountFormatted||'—'}</td>` : '';
+        const siNew     = anyHasSI ? `<td style="text-align:right;color:${siColor};font-weight:${siChanged?'700':'400'}">${c.newInsuredAmountFormatted||'—'}${siArrow}</td>` : '';
         rows += `<tr>
           <td style="font-weight:600">${c.item}</td>
           <td>${c.oldPriceFormatted||'R0.00'}</td>
           <td>${c.newPriceFormatted||'R0.00'}</td>
           <td><span style="color:${cc};font-weight:700">${none?'&mdash;':ar+' '+c.differenceFormatted}</span></td>
+          ${siOld}${siNew}
         </tr>`;
       });
     }
@@ -1022,7 +1031,13 @@
           </div>
           <div class="sect-title">Cover Items with Changes</div>
           <table class="changes-tbl">
-            <thead><tr><th>Cover Item</th><th style="text-align:right">Previous</th><th style="text-align:right">New</th><th style="text-align:right">Change</th></tr></thead>
+            <thead><tr>
+              <th>Cover Item</th>
+              <th style="text-align:right">Prev Premium</th>
+              <th style="text-align:right">New Premium</th>
+              <th style="text-align:right">Change</th>
+              ${anyHasSI ? '<th style="text-align:right">Prev Cover</th><th style="text-align:right">New Cover</th>' : ''}
+            </tr></thead>
             <tbody>${rows}</tbody>
           </table>
           ${bdHtml}
