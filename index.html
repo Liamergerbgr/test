@@ -568,11 +568,13 @@
           </div>
         </div>
       </div>
-      <div style="margin-top:16px;position:relative" id="notes-wrap">
+      <div style="margin-top:16px" id="notes-wrap">
         <label style="font-size:13px;font-weight:600;color:var(--navy);display:block;margin-bottom:6px">Additional Notes <span style="font-weight:400;color:var(--gray-400)">(optional)</span></label>
-        <textarea id="comparison-notes" placeholder="Type notes to include below the comparison in the email…" style="width:100%;font-size:13px;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter,sans-serif;color:var(--gray-700);resize:vertical;min-height:80px;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="renderSavedNotesList();toggleSaveNoteCheckbox()"></textarea>
+        <div style="position:relative">
+          <div id="notes-saved-list" style="display:none;position:absolute;bottom:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(15,39,68,.12);z-index:200;max-height:200px;overflow-y:auto"></div>
+          <textarea id="comparison-notes" placeholder="Type notes to include below the comparison in the email…" style="width:100%;font-size:13px;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter,sans-serif;color:var(--gray-700);resize:vertical;min-height:80px;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="renderSavedNotesList();toggleSaveNoteCheckbox()"></textarea>
+        </div>
         <label id="save-note-label" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--gray-500);margin-top:6px;cursor:pointer;user-select:none"><input type="checkbox" id="save-note-check" style="cursor:pointer;accent-color:var(--blue)"> Save this note for future use</label>
-        <div id="notes-saved-list" style="display:none;position:absolute;left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(15,39,68,.12);z-index:200;max-height:180px;overflow-y:auto;margin-top:4px"></div>
       </div>
       <button class="btn-compare" id="btn-compare" onclick="runComparison()" disabled>Analyse Renewal</button>
     </div>
@@ -1088,8 +1090,7 @@
     });
     g('btn-compare').disabled = true;
     g('comparison-notes').value = '';
-    const nl = g('notes-saved-list'); if (nl) { nl.style.display = 'none'; }
-    const nw = g('notes-wrap'); if (nw) nw.style.marginBottom = '0';
+    const nl = g('notes-saved-list'); if (nl) nl.style.display = 'none';
     const snl = g('save-note-label'); if (snl) snl.style.display = 'none';
     const snc = g('save-note-check'); if (snc) snc.checked = false;
     clearErr('err-compare');
@@ -1264,11 +1265,9 @@
     if (!container) return;
     if (!list.length) {
       container.style.display = 'none';
-      if (wrap) wrap.style.marginBottom = '0';
       return;
     }
     container.style.display = 'block';
-    if (wrap) wrap.style.marginBottom = '192px';
     const header = `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--gray-100);background:#f8fafc">
       <span style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.4px">Saved notes</span>
       <span onclick="closeSavedNotesList()" style="cursor:pointer;color:var(--gray-400);font-size:16px;padding:0 6px;line-height:1;border-radius:4px" onmouseover="this.style.color='var(--gray-700)'" onmouseout="this.style.color='var(--gray-400)'" title="Close">&#10005;</span>
@@ -1289,7 +1288,6 @@
 
   window.closeSavedNotesList = function() {
     const nl = g('notes-saved-list'); if (nl) nl.style.display = 'none';
-    const nw = g('notes-wrap'); if (nw) nw.style.marginBottom = '0';
   };
 
   window.selectSavedNote = function(note) {
