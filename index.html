@@ -231,6 +231,27 @@
     .changes-tbl tr:nth-child(even) td { background: var(--gray-50); }
     .toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: #fff; padding: 12px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); transform: translateY(80px); opacity: 0; transition: all .3s; z-index: 999; }
     .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* AUTH FOOTER */
+    .auth-footer { text-align:center; padding:20px 24px; font-size:12px; color:var(--gray-400); border-top:1px solid var(--gray-100); background:#fff; margin-top:40px; }
+    .auth-footer a { color:var(--gray-400); text-decoration:none; margin:0 8px; cursor:pointer; }
+    .auth-footer a:hover { color:var(--blue); text-decoration:underline; }
+
+    /* VIEWER PAGE */
+    .viewer-wrap { max-width:900px; margin:0 auto; padding:40px 24px; }
+    .viewer-back { display:inline-flex; align-items:center; gap:6px; color:var(--blue); font-size:14px; font-weight:600; cursor:pointer; margin-bottom:20px; background:none; border:none; font-family:'Inter',sans-serif; padding:0; }
+    .viewer-back:hover { text-decoration:underline; }
+    .viewer-meta { font-size:13px; color:var(--gray-400); margin-bottom:20px; }
+
+    /* TRUST PAGES */
+    .trust-wrap { max-width:760px; margin:0 auto; padding:48px 24px; }
+    .trust-wrap h1 { font-size:28px; font-weight:800; color:var(--navy); margin-bottom:6px; }
+    .trust-date { font-size:13px; color:var(--gray-400); margin-bottom:36px; }
+    .trust-wrap h2 { font-size:18px; font-weight:700; color:var(--navy); margin:28px 0 10px; }
+    .trust-wrap p, .trust-wrap li { font-size:14px; color:var(--gray-600); line-height:1.8; margin-bottom:12px; }
+    .trust-wrap ul { padding-left:20px; }
+    .trust-back { display:inline-flex; align-items:center; gap:6px; color:var(--blue); font-size:14px; font-weight:600; cursor:pointer; margin-bottom:28px; background:none; border:none; font-family:'Inter',sans-serif; padding:0; }
+    .trust-back:hover { text-decoration:underline; }
   </style>
 </head>
 <body>
@@ -421,6 +442,9 @@
       <div class="form-group"><label>Email address</label><input type="email" id="s-email" placeholder="you@example.com" /></div>
       <div class="form-group"><label>Password</label><input type="password" id="s-pass" placeholder="At least 8 characters" onkeydown="if(event.key==='Enter')doSignUp()" /></div>
       <button class="btn-full" id="btn-signup" onclick="doSignUp()">Create account</button>
+      <div class="auth-link" style="font-size:12px;color:var(--gray-400);line-height:1.6;margin-top:14px">
+        By creating an account you agree to our <a onclick="showPage('terms')">Terms of Service</a> and <a onclick="showPage('privacy')">Privacy Policy</a>.
+      </div>
       <div class="auth-link">Already have an account? <a onclick="showPage('login')">Sign in</a></div>
     </div>
   </div>
@@ -493,13 +517,20 @@
               <th style="padding:11px 14px;text-align:left;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Client Name</th>
               <th style="padding:11px 14px;text-align:left;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Date</th>
               <th style="padding:11px 14px;text-align:right;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Duration</th>
+              <th style="padding:11px 14px;text-align:right;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Actions</th>
             </tr>
           </thead>
           <tbody id="renewals-tbody">
-            <tr><td colspan="3" style="text-align:center;padding:20px;color:var(--gray-400);font-style:italic">No comparisons yet.</td></tr>
+            <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--gray-400);font-style:italic">No comparisons yet.</td></tr>
           </tbody>
         </table>
       </div>
+    </div>
+    <div class="auth-footer">
+      <a onclick="showPage('privacy')">Privacy Policy</a>
+      <a onclick="showPage('terms')">Terms of Service</a>
+      <a onclick="showPage('support')">Support</a>
+      &copy; 2026 TaskAutomateAI
     </div>
   </div>
 </div>
@@ -596,6 +627,120 @@
       </div>
       <div id="results-output"></div>
     </div>
+    <div class="auth-footer">
+      <a onclick="showPage('privacy')">Privacy Policy</a>
+      <a onclick="showPage('terms')">Terms of Service</a>
+      <a onclick="showPage('support')">Support</a>
+      &copy; 2026 TaskAutomateAI
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     VIEWER — Past Comparison Result
+═══════════════════════════════ -->
+<div class="page" id="page-viewer">
+  <div class="viewer-wrap">
+    <button class="viewer-back" onclick="showPage('dashboard')">&#8592; Back to Dashboard</button>
+    <div class="viewer-meta" id="viewer-meta"></div>
+    <div class="results-hdr" style="margin-bottom:20px">
+      <div class="results-title">Comparison Results</div>
+      <div class="results-actions">
+        <button class="btn-copy" id="viewer-copy-btn" onclick="doCopyHtml('viewer-copy-btn')">&#128203; Copy HTML for Email</button>
+        <button class="btn-reset" onclick="viewerPrintPdf()">&#128196; Print / Save as PDF</button>
+      </div>
+    </div>
+    <div id="viewer-results-output"></div>
+    <div class="auth-footer">
+      <a onclick="showPage('privacy')">Privacy Policy</a>
+      <a onclick="showPage('terms')">Terms of Service</a>
+      <a onclick="showPage('support')">Support</a>
+      &copy; 2026 TaskAutomateAI
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     PRIVACY POLICY
+═══════════════════════════════ -->
+<div class="page" id="page-privacy">
+  <div class="trust-wrap">
+    <button class="trust-back" onclick="history.back()">&#8592; Back</button>
+    <h1>Privacy Policy</h1>
+    <div class="trust-date">Last updated: February 2026</div>
+    <p>RenewalScan AI ("we", "our", "us") is operated by TaskAutomateAI. This policy explains what personal data we collect, why we collect it, and how we protect it.</p>
+    <h2>1. Data We Collect</h2>
+    <ul>
+      <li><strong>Account data:</strong> Your name, email address, and hashed password, stored in Firebase Authentication.</li>
+      <li><strong>Usage data:</strong> A monthly count of comparisons you run, stored in our database under your user ID.</li>
+      <li><strong>Comparison history:</strong> The output of each policy comparison — including client name, date, duration, and the comparison result — stored locally in your browser and associated with your account.</li>
+      <li><strong>Policy document text:</strong> The text extracted from PDFs you upload is sent to our AI processing API for analysis. This text is not stored persistently after processing is complete.</li>
+    </ul>
+    <h2>2. How We Use Your Data</h2>
+    <p>We use your data exclusively to provide the RenewalScan AI service: authenticating your account, tracking your monthly usage against your plan limit, and storing your comparison history so you can revisit past results. We do not use your data for advertising, profiling, or any purpose other than operating this service.</p>
+    <h2>3. Data Sharing</h2>
+    <p>We do not sell, rent, or share your personal data with third parties. Your account data is stored in Google Firebase (Firebase Authentication), operated by Google LLC. Firebase's data processing terms apply. Your comparison data is processed by our AI analysis infrastructure, which does not retain document content after the comparison is complete.</p>
+    <h2>4. Data Retention</h2>
+    <p>Your account data is retained for as long as your account is active. Your comparison history is capped at your 20 most recent comparisons and is stored in your browser's local storage. You may request deletion of your account and all associated data at any time by contacting support.</p>
+    <h2>5. Your Rights (GDPR / POPIA)</h2>
+    <p>If you are located in the European Union or South Africa, you have the right to access, correct, or request deletion of your personal data. To exercise these rights, contact us at the address below.</p>
+    <h2>6. Security</h2>
+    <p>All data is transmitted over HTTPS. Passwords are hashed by Firebase Authentication and never stored in plain text. Comparison results are stored in your browser's local storage, scoped to your account.</p>
+    <h2>7. Contact</h2>
+    <p>For privacy-related requests, contact: <a href="mailto:support@taskautomateai.co.za" style="color:var(--blue)">support@taskautomateai.co.za</a></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     TERMS OF SERVICE
+═══════════════════════════════ -->
+<div class="page" id="page-terms">
+  <div class="trust-wrap">
+    <button class="trust-back" onclick="history.back()">&#8592; Back</button>
+    <h1>Terms of Service</h1>
+    <div class="trust-date">Last updated: February 2026</div>
+    <p>These Terms of Service ("Terms") govern your use of RenewalScan AI, operated by TaskAutomateAI. By creating an account or using this service, you agree to these Terms.</p>
+    <h2>1. Permitted Use</h2>
+    <p>RenewalScan AI is a B2B tool intended for use by licensed insurance brokers and financial advisors. You may use this service only for lawful professional purposes. You may not resell, sublicence, or provide access to the service to third parties without written permission.</p>
+    <h2>2. Account Responsibility</h2>
+    <p>You are responsible for maintaining the security of your account credentials. You are responsible for all activity that occurs under your account. Notify us immediately if you suspect unauthorised access.</p>
+    <h2>3. Acceptable Use</h2>
+    <p>You may not use RenewalScan AI to process documents you do not have lawful authority to access, to attempt to reverse-engineer the AI analysis, to upload malicious files, or to circumvent usage limits through automated means.</p>
+    <h2>4. Service Availability</h2>
+    <p>We aim to provide continuous availability but do not guarantee uninterrupted service. We may perform maintenance at any time. Planned downtime will be communicated where possible.</p>
+    <h2>5. Limitation of Liability</h2>
+    <p>RenewalScan AI is an analytical tool. The output of any comparison is for informational purposes and should not be relied upon as the sole basis for financial or insurance advice to clients. TaskAutomateAI accepts no liability for decisions made based on comparison output. To the maximum extent permitted by applicable law, our total liability to you for any claim arising from use of this service is limited to the fees you paid in the 30 days preceding the claim.</p>
+    <h2>6. Intellectual Property</h2>
+    <p>All software, design, and content in this service is owned by TaskAutomateAI. You retain ownership of any documents you upload.</p>
+    <h2>7. Termination</h2>
+    <p>We may suspend or terminate your account for material breach of these Terms. You may cancel your account at any time by contacting support.</p>
+    <h2>8. Governing Law</h2>
+    <p>These Terms are governed by the laws of South Africa. Disputes will be resolved in the courts of South Africa.</p>
+    <h2>9. Contact</h2>
+    <p>For questions about these Terms: <a href="mailto:support@taskautomateai.co.za" style="color:var(--blue)">support@taskautomateai.co.za</a></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     SUPPORT
+═══════════════════════════════ -->
+<div class="page" id="page-support">
+  <div class="trust-wrap">
+    <button class="trust-back" onclick="history.back()">&#8592; Back</button>
+    <h1>Support &amp; Contact</h1>
+    <div class="trust-date">We respond to all queries within 1 business day</div>
+    <h2>Get in Touch</h2>
+    <p>Email us at <a href="mailto:support@taskautomateai.co.za" style="color:var(--blue)">support@taskautomateai.co.za</a>. We respond within 1 business day (Monday&ndash;Friday, 08:00&ndash;17:00 SAST).</p>
+    <h2>Frequently Asked Questions</h2>
+    <p><strong>What file types are supported?</strong><br>RenewalScan AI accepts PDF files only. Both text-based and digitally generated PDFs work. Scanned image-only PDFs are not supported &mdash; the text must be extractable.</p>
+    <p><strong>Are password-protected PDFs supported?</strong><br>Yes. Enter the PDF password in the field below the upload zone before running the comparison.</p>
+    <p><strong>How long does a comparison take?</strong><br>Most comparisons complete in 30&ndash;90 seconds depending on document length and AI processing time.</p>
+    <p><strong>Where is my comparison history stored?</strong><br>Your 20 most recent comparison results are stored in your browser's local storage, tied to your account. They persist across browser restarts but will be cleared if you clear your browser data.</p>
+    <p><strong>What happens to the PDFs I upload?</strong><br>Only the extracted text from your PDFs is sent to our AI for analysis. The raw PDF files are never uploaded to our servers. Extracted text is not stored after processing.</p>
+    <p><strong>I hit my monthly comparison limit. What do I do?</strong><br>Contact us to upgrade your plan. Upgrades take effect immediately.</p>
+    <p><strong>Can I view a past comparison result?</strong><br>Yes &mdash; click the "View" button next to any comparison in your dashboard history to re-open the full result.</p>
+    <h2>Billing</h2>
+    <p>For billing queries, plan upgrades, or cancellations, email <a href="mailto:support@taskautomateai.co.za" style="color:var(--blue)">support@taskautomateai.co.za</a> with your account email address.</p>
   </div>
 </div>
 
@@ -658,7 +803,7 @@
       const name = await getUserName(freshUser);
       setNav(true, name);
       await loadDashboard(freshUser);
-      if (!['dashboard','compare','verify'].includes(currentPage)) showPage('dashboard');
+      if (!['dashboard','compare','viewer','verify'].includes(currentPage)) showPage('dashboard');
     } else {
       currentUser = null;
       setNav(false);
@@ -703,11 +848,11 @@
   function renewalsKey() {
     return currentUser ? 'renewals_' + currentUser.uid : 'renewals_guest';
   }
-  function saveRenewalRecord(clientName, durationSecs) {
+  function saveRenewalRecord(clientName, durationSecs, resultData, resultHtml) {
     try {
       const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
-      list.unshift({ clientName, durationSecs, completedAt: new Date().toISOString() });
-      if (list.length > 50) list.length = 50;
+      list.unshift({ clientName, durationSecs, completedAt: new Date().toISOString(), result: resultData || null, resultHtml: resultHtml || '' });
+      if (list.length > 20) list.length = 20;
       localStorage.setItem(renewalsKey(), JSON.stringify(list));
     } catch(e) { console.warn('Failed to save renewal record', e); }
   }
@@ -717,16 +862,20 @@
       const tbody = g('renewals-tbody');
       if (!tbody) return;
       if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--gray-400);font-style:italic">No comparisons yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--gray-400);font-style:italic">No comparisons yet.</td></tr>';
         return;
       }
-      tbody.innerHTML = list.map(r => {
+      tbody.innerHTML = list.map((r, i) => {
         const date = r.completedAt ? new Date(r.completedAt).toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
         const dur = r.durationSecs ? (r.durationSecs >= 60 ? Math.floor(r.durationSecs/60) + 'm ' + (r.durationSecs%60) + 's' : r.durationSecs + 's') : '—';
+        const viewBtn = r.result
+          ? `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100);text-align:right"><button onclick="viewStoredComparison(${i})" style="background:var(--blue);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">View</button></td>`
+          : `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100)"></td>`;
         return `<tr>
           <td style="padding:11px 14px;font-size:13px;font-weight:600;color:var(--navy);border-bottom:1px solid var(--gray-100)">${r.clientName||'—'}</td>
           <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100)">${date}</td>
           <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100);text-align:right">${dur}</td>
+          ${viewBtn}
         </tr>`;
       }).join('');
     } catch(e) { console.warn('Failed to load renewals', e); }
@@ -934,7 +1083,7 @@
       if (newPass) savePassword(newPass);
       if (notes && g('save-note-check')?.checked) saveNote(notes);
       const elapsed = Math.round((Date.now() - startTime) / 1000);
-      saveRenewalRecord(result.data?.clientName || 'Unknown Client', elapsed);
+      saveRenewalRecord(result.data?.clientName || 'Unknown Client', elapsed, result.data, result.htmlBody || '');
       renderResults(result.data);
       g('proc-panel').classList.remove('show');
       g('results-panel').classList.add('show');
@@ -959,8 +1108,8 @@
   const sleep = ms => new Promise(r => setTimeout(r,ms));
 
   // ── Render Results ───────────────────────────────────────────
-  function renderResults(d) {
-    if (!d) { g('results-output').innerHTML = '<p style="color:var(--gray-600)">No data returned.</p>'; return; }
+  function renderResults(d, targetId = 'results-output') {
+    if (!d) { g(targetId).innerHTML = '<p style="color:var(--gray-600)">No data returned.</p>'; return; }
     const inc   = d.totalDirection === 'increase';
     const arrow = inc ? '&#9650;' : '&#9660;';
     const clr   = inc ? '#dc2626' : '#059669';
@@ -1019,7 +1168,7 @@
       </div>`;
     }
 
-    g('results-output').innerHTML = `
+    g(targetId).innerHTML = `
       <div class="result-box">
         <div class="result-head">
           <div class="result-client">${d.clientName||'Policy Comparison'}</div>
@@ -1050,9 +1199,9 @@
   }
 
   // ── Copy HTML ────────────────────────────────────────────────
-  window.doCopyHtml = async function() {
+  window.doCopyHtml = async function(btnId = 'btn-copy') {
     if (!htmlToCopy) return;
-    const btn = g('btn-copy');
+    const btn = g(btnId);
     try {
       await navigator.clipboard.write([new ClipboardItem({
         'text/html':  new Blob([htmlToCopy], { type:'text/html' }),
@@ -1063,9 +1212,9 @@
       ta.value = htmlToCopy; document.body.appendChild(ta); ta.select();
       document.execCommand('copy'); document.body.removeChild(ta);
     }
-    btn.textContent = '\u2713 Copied!'; btn.classList.add('copied');
+    if (btn) { btn.textContent = '\u2713 Copied!'; btn.classList.add('copied'); }
     const t = g('toast'); t.classList.add('show');
-    setTimeout(() => { btn.textContent='\uD83D\uDCCB Copy HTML for Email'; btn.classList.remove('copied'); t.classList.remove('show'); }, 3000);
+    setTimeout(() => { if (btn) { btn.textContent='\uD83D\uDCCB Copy HTML for Email'; btn.classList.remove('copied'); } t.classList.remove('show'); }, 3000);
   };
 
   // ── Print / Save as PDF ──────────────────────────────────────
@@ -1115,12 +1264,12 @@
   // ── Page navigation ──────────────────────────────────────────
   window.showPage = function(page) {
     // Hard gate — unverified email users cannot access protected pages
-    if (['dashboard','compare'].includes(page) && currentUser) {
+    if (['dashboard','compare','viewer'].includes(page) && currentUser) {
       const isEmailProvider = currentUser.providerData.some(p => p.providerId === 'password');
       if (isEmailProvider && !currentUser.emailVerified) { page = 'verify'; }
     }
     // Hard gate — logged-out users cannot access protected pages
-    if (['dashboard','compare'].includes(page) && !currentUser) { page = 'login'; }
+    if (['dashboard','compare','viewer'].includes(page) && !currentUser) { page = 'login'; }
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const el = document.getElementById('page-' + page);
     if (el) { el.classList.add('active'); currentPage = page; window.scrollTo(0,0); }
@@ -1314,6 +1463,34 @@
     if (ta) ta.addEventListener('focus', renderSavedNotesList);
   });
 
+
+  // ── Comparison Viewer ────────────────────────────────────────
+  window.viewStoredComparison = function(index) {
+    try {
+      const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
+      const record = list[index];
+      if (!record || !record.result) { alert('Full result data is not available for this comparison. Only new comparisons are viewable.'); return; }
+      htmlToCopy = record.resultHtml || '';
+      showPage('viewer');
+      renderViewerResult(record);
+    } catch(e) {
+      console.warn('Failed to load stored comparison', e);
+      alert('Could not load this comparison.');
+    }
+  };
+
+  function renderViewerResult(record) {
+    const d = record.completedAt ? new Date(record.completedAt) : new Date();
+    const dateStr = d.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' });
+    const el = g('viewer-meta');
+    if (el) el.textContent = (record.clientName || 'Unknown Client') + ' \u2014 ' + dateStr;
+    const copyBtn = g('viewer-copy-btn');
+    if (copyBtn) copyBtn.style.display = record.resultHtml ? '' : 'none';
+    g('viewer-results-output').innerHTML = '';
+    renderResults(record.result, 'viewer-results-output');
+  }
+
+  window.viewerPrintPdf = function() { doPrintPdf(); };
 
   function authErr(code) {
     const m = {
