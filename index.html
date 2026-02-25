@@ -570,7 +570,8 @@
       </div>
       <div style="margin-top:16px;position:relative" id="notes-wrap">
         <label style="font-size:13px;font-weight:600;color:var(--navy);display:block;margin-bottom:6px">Additional Notes <span style="font-weight:400;color:var(--gray-400)">(optional)</span></label>
-        <textarea id="comparison-notes" placeholder="Type notes to include below the comparison in the email…" style="width:100%;font-size:13px;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter,sans-serif;color:var(--gray-700);resize:vertical;min-height:80px;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="renderSavedNotesList()"></textarea>
+        <textarea id="comparison-notes" placeholder="Type notes to include below the comparison in the email…" style="width:100%;font-size:13px;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter,sans-serif;color:var(--gray-700);resize:vertical;min-height:80px;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="renderSavedNotesList();toggleSaveNoteCheckbox()"></textarea>
+        <label id="save-note-label" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--gray-500);margin-top:6px;cursor:pointer;user-select:none"><input type="checkbox" id="save-note-check" style="cursor:pointer;accent-color:var(--blue)"> Save this note for future use</label>
         <div id="notes-saved-list" style="display:none;position:absolute;left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(15,39,68,.12);z-index:200;max-height:180px;overflow-y:auto;margin-top:4px"></div>
       </div>
       <button class="btn-compare" id="btn-compare" onclick="runComparison()" disabled>Analyse Renewal</button>
@@ -929,7 +930,7 @@
       await addUsage(currentUser.uid);
       if (oldPass) savePassword(oldPass);
       if (newPass) savePassword(newPass);
-      if (notes) saveNote(notes);
+      if (notes && g('save-note-check')?.checked) saveNote(notes);
       const elapsed = Math.round((Date.now() - startTime) / 1000);
       saveRenewalRecord(result.data?.clientName || 'Unknown Client', elapsed);
       renderResults(result.data);
@@ -1082,15 +1083,33 @@
       g('fn-'+w).textContent = '';
       g('file-'+w).value = '';
       g('pass-'+w).value = '';
+      g('pass-trigger-label-' + w).textContent = 'PDF password (if protected)';
+      g('pass-trigger-label-' + w).style.color = '';
     });
     g('btn-compare').disabled = true;
     g('comparison-notes').value = '';
-    const nl = g('notes-saved-list'); if (nl) nl.style.display = 'none';
+    const nl = g('notes-saved-list'); if (nl) { nl.style.display = 'none'; }
+    const nw = g('notes-wrap'); if (nw) nw.style.marginBottom = '0';
+    const snl = g('save-note-label'); if (snl) snl.style.display = 'none';
+    const snc = g('save-note-check'); if (snc) snc.checked = false;
     clearErr('err-compare');
     g('results-panel').classList.remove('show');
     g('upload-panel').style.display = 'block';
     resetSteps();
+    autoFillSavedPasswords();
   };
+
+  function autoFillSavedPasswords() {
+    const saved = getSavedPasswords();
+    if (!saved.length) return;
+    const pw = saved[0];
+    ['old', 'new'].forEach(w => {
+      g('pass-' + w).value = pw;
+      const lbl = g('pass-trigger-label-' + w);
+      lbl.textContent = pw;
+      lbl.style.color = 'var(--gray-700)';
+    });
+  }
 
   // ── Page navigation ──────────────────────────────────────────
   window.showPage = function(page) {
@@ -1105,6 +1124,7 @@
     const el = document.getElementById('page-' + page);
     if (el) { el.classList.add('active'); currentPage = page; window.scrollTo(0,0); }
     if (page === 'dashboard') loadRenewals();
+    if (page === 'compare') autoFillSavedPasswords();
   };
 
   window.scrollToPricing = function() {
@@ -1213,8 +1233,7 @@
     });
     const notesWrap = g('notes-wrap');
     if (notesWrap && !notesWrap.contains(e.target)) {
-      const nl = g('notes-saved-list');
-      if (nl) nl.style.display = 'none';
+      closeSavedNotesList();
     }
   });
 
@@ -1241,10 +1260,20 @@
   window.renderSavedNotesList = function() {
     const list = getSavedNotes();
     const container = g('notes-saved-list');
+    const wrap = g('notes-wrap');
     if (!container) return;
-    if (!list.length) { container.style.display = 'none'; return; }
+    if (!list.length) {
+      container.style.display = 'none';
+      if (wrap) wrap.style.marginBottom = '0';
+      return;
+    }
     container.style.display = 'block';
-    container.innerHTML = list.map((note, i) => {
+    if (wrap) wrap.style.marginBottom = '192px';
+    const header = `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--gray-100);background:#f8fafc">
+      <span style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.4px">Saved notes</span>
+      <span onclick="closeSavedNotesList()" style="cursor:pointer;color:var(--gray-400);font-size:16px;padding:0 6px;line-height:1;border-radius:4px" onmouseover="this.style.color='var(--gray-700)'" onmouseout="this.style.color='var(--gray-400)'" title="Close">&#10005;</span>
+    </div>`;
+    container.innerHTML = header + list.map((note, i) => {
       const preview = note.length > 80 ? note.slice(0, 80) + '…' : note;
       const safe = note.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--gray-100);font-size:13px;color:var(--gray-700);background:#fff;transition:background .1s;gap:8px"
@@ -1258,9 +1287,14 @@
     }).join('');
   };
 
+  window.closeSavedNotesList = function() {
+    const nl = g('notes-saved-list'); if (nl) nl.style.display = 'none';
+    const nw = g('notes-wrap'); if (nw) nw.style.marginBottom = '0';
+  };
+
   window.selectSavedNote = function(note) {
     g('comparison-notes').value = note;
-    g('notes-saved-list').style.display = 'none';
+    closeSavedNotesList();
   };
 
   window.deleteSavedNote = function(e, note) {
@@ -1268,6 +1302,12 @@
     deleteNote(note);
     if (g('comparison-notes').value === note) g('comparison-notes').value = '';
     renderSavedNotesList();
+  };
+
+  window.toggleSaveNoteCheckbox = function() {
+    const val = g('comparison-notes').value.trim();
+    const lbl = g('save-note-label');
+    if (lbl) lbl.style.display = val ? 'flex' : 'none';
   };
 
   // Show saved notes list when textarea is focused
