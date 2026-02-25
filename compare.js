@@ -37,8 +37,13 @@ export async function onRequestPost(context) {
     });
 
     if (!response.ok) {
-      const errText = await response.text();
-      return new Response(JSON.stringify({ error: 'Processing error. Please try again.', detail: errText }), { status: 502 });
+      let errorMessage = 'Processing error. Please try again.';
+      try {
+        const errData = await response.json();
+        if (errData.message) errorMessage = errData.message;
+        else if (typeof errData.error === 'string') errorMessage = errData.error;
+      } catch (e) { /* not JSON, keep default message */ }
+      return new Response(JSON.stringify({ error: errorMessage }), { status: 502 });
     }
 
     const result = await response.json();

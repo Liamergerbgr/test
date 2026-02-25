@@ -587,6 +587,7 @@
         <div class="results-title">Comparison Results</div>
         <div class="results-actions">
           <button class="btn-copy" id="btn-copy" onclick="doCopyHtml()">&#128203; Copy HTML for Email</button>
+          <button class="btn-reset" id="btn-pdf" onclick="doPrintPdf()">&#128196; Print / Save as PDF</button>
           <button class="btn-reset" onclick="resetCompare()">&#8635; New Comparison</button>
         </div>
       </div>
@@ -1062,6 +1063,16 @@
     btn.textContent = '\u2713 Copied!'; btn.classList.add('copied');
     const t = g('toast'); t.classList.add('show');
     setTimeout(() => { btn.textContent='\uD83D\uDCCB Copy HTML for Email'; btn.classList.remove('copied'); t.classList.remove('show'); }, 3000);
+  };
+
+  // ── Print / Save as PDF ──────────────────────────────────────
+  window.doPrintPdf = function() {
+    if (!htmlToCopy) return;
+    const w = window.open('', '_blank');
+    w.document.write(htmlToCopy);
+    w.document.close();
+    w.focus();
+    setTimeout(() => { w.print(); }, 400);
   };
 
   window.resetCompare = function() {
