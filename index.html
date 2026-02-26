@@ -176,6 +176,10 @@
     .ps-connector { flex: 1; height: 2px; background: var(--gray-200); margin: 0 10px; transition: background .3s; }
     .ps-connector.done { background: var(--green); }
     @keyframes spin { to { transform: rotate(360deg); } }
+    /* Auth-init loader — covers flash of wrong page on refresh */
+    #page-loader { position:fixed; inset:0; background:#fff; z-index:9999; display:flex; align-items:center; justify-content:center; transition:opacity .25s ease; }
+    #page-loader.hidden { opacity:0; pointer-events:none; }
+    #page-loader .pl-spin { width:30px; height:30px; border:3px solid var(--gray-200); border-top-color:var(--blue); border-radius:50%; animation:spin .7s linear infinite; }
 
     /* Upload */
     .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
@@ -293,6 +297,9 @@
   </style>
 </head>
 <body>
+
+<!-- Auth-init loader: hides flash of landing page before Firebase resolves -->
+<div id="page-loader"><div class="pl-spin"></div></div>
 
 <!-- NAV -->
 <nav>
@@ -924,7 +931,7 @@
   } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.5.2';
+  const APP_VERSION = '0.5.3';
 
   // ─────────────────────────────────────────────────────────────
   // FIREBASE CONFIG
@@ -998,12 +1005,22 @@
       const name = await getUserName(freshUser);
       setNav(true, name);
       await loadDashboard(freshUser);
-      if (!['dashboard','compare','viewer','verify'].includes(currentPage)) showPage('dashboard');
+      // Restore the page the user was on before refresh, default to dashboard
+      const savedPage = sessionStorage.getItem('rs_page');
+      const dest = (savedPage && !['login','signup','verify'].includes(savedPage)) ? savedPage : 'dashboard';
+      showPage(dest); // showPage will gate protected pages if needed
     } else {
       currentUser = null;
       setNav(false);
-      if (!['landing','login','signup','verify'].includes(currentPage)) showPage('landing');
+      // Restore public page if they were on one, otherwise landing
+      const savedPage = sessionStorage.getItem('rs_page');
+      const publicPages = ['landing','why','subscribe','terms','privacy','support'];
+      const dest = (savedPage && publicPages.includes(savedPage)) ? savedPage : 'landing';
+      showPage(dest);
     }
+    // Hide the auth-init loader now that we know where to go
+    const loader = document.getElementById('page-loader');
+    if (loader) { loader.classList.add('hidden'); setTimeout(() => loader.remove(), 300); }
   });
 
   async function getUserName(user) {
@@ -1204,7 +1221,7 @@
   };
 
   // ── Sign Out ─────────────────────────────────────────────────
-  window.doSignOut = async function() { await fbSignOut(auth); showPage('landing'); };
+  window.doSignOut = async function() { sessionStorage.removeItem('rs_page'); await fbSignOut(auth); showPage('landing'); };
 
   // ── PDF Extraction ───────────────────────────────────────────
   async function extractPdf(file, password) {
@@ -1747,6 +1764,8 @@ ${sectionHeader('Premium Breakdown')}
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const el = document.getElementById('page-' + page);
     if (el) { el.classList.add('active'); currentPage = page; window.scrollTo(0,0); }
+    // Remember page across refreshes (skip transient/auth pages)
+    if (!['verify','login','signup'].includes(page)) sessionStorage.setItem('rs_page', page);
     if (page === 'dashboard') loadRenewals();
     if (page === 'compare') autoFillSavedPasswords();
   };
