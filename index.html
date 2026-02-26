@@ -768,7 +768,7 @@
   } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.4.2';
+  const APP_VERSION = '0.4.3';
 
   // ─────────────────────────────────────────────────────────────
   // FIREBASE CONFIG
@@ -866,10 +866,10 @@
   function renewalsKey() {
     return currentUser ? 'renewals_' + currentUser.uid : 'renewals_guest';
   }
-  function saveRenewalRecord(clientName, durationSecs, resultData, resultHtml) {
+  function saveRenewalRecord(clientName, durationSecs, resultData, resultHtml, notes) {
     try {
       const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
-      list.unshift({ clientName, durationSecs, completedAt: new Date().toISOString(), result: resultData || null, resultHtml: resultHtml || '' });
+      list.unshift({ clientName, durationSecs, completedAt: new Date().toISOString(), result: resultData || null, resultHtml: resultHtml || '', notes: notes || '' });
       if (list.length > 20) list.length = 20;
       localStorage.setItem(renewalsKey(), JSON.stringify(list));
     } catch(e) { console.warn('Failed to save renewal record', e); }
@@ -1098,7 +1098,7 @@
 
       // Step 3
       setProc('Building your report...', 'Almost done');
-      htmlToCopy = buildEmailHtml(result.data);
+      htmlToCopy = buildEmailHtml(result.data, notes);
       await sleep(600);
       setStep(3,'done');
       await addUsage(currentUser.uid);
@@ -1106,8 +1106,8 @@
       if (newPass && g('save-pass-check-new')?.checked) savePassword(newPass);
       if (notes && g('save-note-check')?.checked) saveNote(notes);
       const elapsed = Math.round((Date.now() - startTime) / 1000);
-      saveRenewalRecord(result.data?.clientName || 'Unknown Client', elapsed, result.data, result.htmlBody || '');
-      renderResults(result.data);
+      saveRenewalRecord(result.data?.clientName || 'Unknown Client', elapsed, result.data, result.htmlBody || '', notes);
+      renderResults(result.data, 'results-output', notes);
       g('proc-panel').classList.remove('show');
       g('results-panel').classList.add('show');
 
@@ -1134,7 +1134,7 @@
   function esc(s) { const d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
 
   // ── Render Results ───────────────────────────────────────────
-  function renderResults(d, targetId = 'results-output') {
+  function renderResults(d, targetId = 'results-output', notes = '') {
     if (!d) { g(targetId).innerHTML = '<p style="color:var(--gray-600)">No data returned.</p>'; return; }
     const inc   = d.totalDirection === 'increase';
     const arrow = inc ? '&#9650;' : '&#9660;';
@@ -1225,12 +1225,13 @@
             <tbody>${rows}</tbody>
           </table>
           ${bdHtml}
+          ${notes ? `<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-200)"><div class="sect-title">Broker Notes</div><p style="font-size:13px;color:var(--gray-700);line-height:1.7;white-space:pre-wrap;margin:0">${esc(notes)}</p></div>` : ''}
         </div>
       </div>`;
   }
 
   // ── Build Outlook-Compatible Email HTML ──────────────────────
-  function buildEmailHtml(d) {
+  function buildEmailHtml(d, notes = '') {
     if (!d) return '';
     const inc       = d.totalDirection === 'increase';
     const arrow     = inc ? '&#9650;' : '&#9660;';
@@ -1328,7 +1329,7 @@ ${sectionHeader('Premium Breakdown')}
 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#f1f5f9">
 <tr><td align="center" style="padding:32px 16px">
 
-<table width="600" cellpadding="0" cellspacing="0" role="presentation" style="width:600px;max-width:600px;background:#ffffff">
+<table width="600" cellpadding="0" cellspacing="0" role="presentation" style="width:600px;max-width:600px;background:#ffffff;border-top:4px solid #2563eb">
 
   <!-- HEADER -->
   <tr bgcolor="#0f2744">
@@ -1342,13 +1343,13 @@ ${sectionHeader('Premium Breakdown')}
   <tr><td style="padding:28px 32px 20px">
     <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
     <tr>
-      <td width="48%" bgcolor="#f8fafc" style="background:#f8fafc;padding:16px;border:1px solid #e2e8f0">
-        <p style="margin:0;font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.8px;font-family:Arial,Helvetica,sans-serif">Previous Premium</p>
+      <td width="48%" bgcolor="#fffbeb" style="background:#fffbeb;padding:16px;border:1px solid #fde68a;border-left:4px solid #d97706">
+        <p style="margin:0;font-size:11px;color:#92400e;font-weight:700;text-transform:uppercase;letter-spacing:.8px;font-family:Arial,Helvetica,sans-serif">Previous Premium</p>
         <p style="margin:6px 0 0;font-size:20px;font-weight:700;color:#d97706;font-family:Arial,Helvetica,sans-serif">${esc(d.oldTotalFormatted || '')}</p>
       </td>
       <td width="4%" style="font-size:0;line-height:0">&nbsp;</td>
-      <td width="48%" bgcolor="#f8fafc" style="background:#f8fafc;padding:16px;border:1px solid #e2e8f0">
-        <p style="margin:0;font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.8px;font-family:Arial,Helvetica,sans-serif">New Premium</p>
+      <td width="48%" bgcolor="${inc ? '#fff1f2' : '#f0fdf4'}" style="background:${inc ? '#fff1f2' : '#f0fdf4'};padding:16px;border:1px solid ${inc ? '#fecdd3' : '#bbf7d0'};border-left:4px solid ${newClr}">
+        <p style="margin:0;font-size:11px;color:${inc ? '#9f1239' : '#14532d'};font-weight:700;text-transform:uppercase;letter-spacing:.8px;font-family:Arial,Helvetica,sans-serif">New Premium</p>
         <p style="margin:6px 0 0;font-size:20px;font-weight:700;color:${newClr};font-family:Arial,Helvetica,sans-serif">${esc(d.newTotalFormatted || '')}</p>
       </td>
     </tr>
@@ -1381,11 +1382,12 @@ ${sectionHeader('Premium Breakdown')}
   <!-- BREAKDOWN SECTION (conditional) -->
   ${bdSection}
 
-  <!-- FOOTER -->
-  <tr bgcolor="#f8fafc">
-  <td bgcolor="#f8fafc" style="background:#f8fafc;padding:20px 32px;border-top:2px solid #e2e8f0">
-    <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;font-family:Arial,Helvetica,sans-serif">Generated by RenewalScan AI &middot; v${APP_VERSION} &middot; TaskAutomateAI.co.za</p>
-  </td></tr>
+  <!-- BROKER NOTES (conditional) -->
+  ${notes ? `
+  ${sectionHeader('Broker Notes')}
+  <tr><td style="padding:0 32px 28px">
+    <p style="margin:0;font-size:13px;color:#334155;line-height:1.8;font-family:Arial,Helvetica,sans-serif;white-space:pre-wrap">${esc(notes).replace(/\n/g,'<br>')}</p>
+  </td></tr>` : ''}
 
 </table>
 </td></tr>
@@ -1630,15 +1632,15 @@ ${sectionHeader('Premium Breakdown')}
     container.style.display = 'block';
     const header = `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--gray-100);background:#f8fafc">
       <span style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.4px">Saved notes</span>
-      <span onclick="closeSavedNotesList()" style="cursor:pointer;color:var(--gray-400);font-size:16px;padding:0 6px;line-height:1;border-radius:4px" onmouseover="this.style.color='var(--gray-700)'" onmouseout="this.style.color='var(--gray-400)'" title="Close">&#10005;</span>
+      <span onclick="closeSavedNotesList()" onmousedown="event.preventDefault()" style="cursor:pointer;color:var(--gray-400);font-size:16px;padding:0 6px;line-height:1;border-radius:4px" onmouseover="this.style.color='var(--gray-700)'" onmouseout="this.style.color='var(--gray-400)'" title="Close">&#10005;</span>
     </div>`;
     container.innerHTML = header + list.map((note, i) => {
       const preview = note.length > 80 ? note.slice(0, 80) + '…' : note;
       const safe = note.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--gray-100);font-size:13px;color:var(--gray-700);background:#fff;transition:background .1s;gap:8px"
            onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
-        <span style="cursor:pointer;flex:1;line-height:1.4" onclick="selectSavedNote('${safe}')">${preview}</span>
-        <span onclick="deleteSavedNote(event,'${safe}')"
+        <span style="cursor:pointer;flex:1;line-height:1.4" onmousedown="event.preventDefault()" onclick="selectSavedNote('${safe}')">${preview}</span>
+        <span onclick="deleteSavedNote(event,'${safe}')" onmousedown="event.preventDefault()"
               style="color:var(--gray-400);font-size:14px;padding:2px 6px;border-radius:4px;cursor:pointer;flex-shrink:0"
               onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--gray-400)'"
               title="Delete this saved note">&#10005;</span>
@@ -1682,7 +1684,7 @@ ${sectionHeader('Premium Breakdown')}
       const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
       const record = list[index];
       if (!record || !record.result) { alert('Full result data is not available for this comparison. Only new comparisons are viewable.'); return; }
-      htmlToCopy = record.result ? buildEmailHtml(record.result) : '';
+      htmlToCopy = record.result ? buildEmailHtml(record.result, record.notes || '') : '';
       showPage('viewer');
       renderViewerResult(record);
     } catch(e) {
@@ -1697,9 +1699,9 @@ ${sectionHeader('Premium Breakdown')}
     const el = g('viewer-meta');
     if (el) el.textContent = (record.clientName || 'Unknown Client') + ' \u2014 ' + dateStr;
     const copyBtn = g('viewer-copy-btn');
-    if (copyBtn) copyBtn.style.display = record.resultHtml ? '' : 'none';
+    if (copyBtn) copyBtn.style.display = record.result ? '' : 'none';
     g('viewer-results-output').innerHTML = '';
-    renderResults(record.result, 'viewer-results-output');
+    renderResults(record.result, 'viewer-results-output', record.notes || '');
   }
 
   window.viewerPrintPdf = function() { doPrintPdf('viewer-results-output'); };
