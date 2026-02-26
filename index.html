@@ -1017,7 +1017,7 @@
         <div class="form-group" style="margin-bottom:0"><label>Full name</label><input type="text" id="set-name" placeholder="Your name" /></div>
         <div class="form-group" style="margin-bottom:0"><label>Email address</label><input type="email" id="set-email" disabled style="opacity:.6;cursor:not-allowed" /></div>
       </div>
-      <button class="btn-full" style="margin-top:18px;max-width:200px" onclick="doSaveProfile()">Save changes</button>
+      <button class="btn-full" id="btn-save-profile" style="margin-top:18px;max-width:200px" onclick="doSaveProfile()">Save changes</button>
     </div>
 
     <div class="settings-section">
@@ -1071,7 +1071,7 @@
           <label>Email address</label>
           <input type="email" id="team-invite-email" placeholder="colleague@example.com" onkeydown="if(event.key==='Enter')doInviteMember()" />
         </div>
-        <button class="btn-primary" style="padding:12px 22px;white-space:nowrap" onclick="doInviteMember()">Send Invite</button>
+        <button class="btn-primary" id="btn-invite" style="padding:12px 22px;white-space:nowrap" onclick="doInviteMember()">Send Invite</button>
       </div>
     </div>
 
@@ -1081,6 +1081,7 @@
         <button class="btn-sm" onclick="loadTeam()">Refresh</button>
       </div>
       <div class="msg-error" id="err-team"></div>
+      <div class="msg-success" id="ok-team"></div>
       <div id="team-members-list">
         <div style="text-align:center;padding:32px;color:var(--gray-400);font-size:14px">Loading...</div>
       </div>
@@ -1432,13 +1433,13 @@
 
   // ── Reset Password ───────────────────────────────────────────
   window.doResetPassword = async function() {
-    const pass  = (g('rp-pass')?.value || '').trim();
-    const pass2 = (g('rp-pass2')?.value || '').trim();
+    const pass  = (g('r-pass')?.value || '').trim();
+    const pass2 = (g('r-pass2')?.value || '').trim();
     clearErr('err-reset');
     if (!pendingResetToken) { showErr('err-reset', 'Invalid or expired reset link. Please request a new one.'); return; }
     if (pass.length < 8)   { showErr('err-reset', 'Password must be at least 8 characters.'); return; }
     if (pass !== pass2)    { showErr('err-reset', 'Passwords do not match.'); return; }
-    const btn = g('btn-reset');
+    const btn = g('btn-reset-pass');
     btn.disabled = true; btn.textContent = 'Resetting…';
     try {
       const res  = await fetch(N8N_BASE + '/auth/reset-password', {
@@ -1489,15 +1490,20 @@
   // ── Settings Page ────────────────────────────────────────────
   function loadSettingsPage() {
     if (!currentUser) return;
-    const nameEl  = g('settings-name');
-    const emailEl = g('settings-email');
+    const nameEl  = g('set-name');
+    const emailEl = g('set-email');
     if (nameEl)  nameEl.value  = currentUser.name  || '';
     if (emailEl) emailEl.value = currentUser.email || '';
+    const sub = currentUser.subscription || {};
+    const planEl   = g('set-plan-name');
+    const detailEl = g('set-plan-detail');
+    if (planEl)   planEl.textContent   = sub.plan || 'Starter';
+    if (detailEl) detailEl.textContent = (sub.comparisonsUsed || 0) + ' / ' + (sub.maxComparisons || 25) + ' comparisons used';
   }
 
   window.doSaveProfile = async function() {
     clearErr('err-settings-profile');
-    const name = (g('settings-name')?.value || '').trim();
+    const name = (g('set-name')?.value || '').trim();
     if (!name) { showErr('err-settings-profile', 'Name cannot be empty.'); return; }
     const btn = g('btn-save-profile');
     btn.disabled = true; btn.textContent = 'Saving…';
@@ -1521,14 +1527,14 @@
   };
 
   window.doChangePassword = async function() {
-    clearErr('err-settings-pw');
-    const current  = (g('settings-pw-current')?.value || '');
-    const newPw    = (g('settings-pw-new')?.value || '');
-    const confirm  = (g('settings-pw-confirm')?.value || '');
-    if (!current)         { showErr('err-settings-pw', 'Enter your current password.'); return; }
-    if (newPw.length < 8) { showErr('err-settings-pw', 'New password must be at least 8 characters.'); return; }
-    if (newPw !== confirm) { showErr('err-settings-pw', 'Passwords do not match.'); return; }
-    const btn = g('btn-change-pw');
+    clearErr('err-settings-pass');
+    const current  = (g('set-pass-current')?.value || '');
+    const newPw    = (g('set-pass-new')?.value || '');
+    const confirm  = (g('set-pass-new2')?.value || '');
+    if (!current)         { showErr('err-settings-pass', 'Enter your current password.'); return; }
+    if (newPw.length < 8) { showErr('err-settings-pass', 'New password must be at least 8 characters.'); return; }
+    if (newPw !== confirm) { showErr('err-settings-pass', 'Passwords do not match.'); return; }
+    const btn = g('btn-change-pass');
     btn.disabled = true; btn.textContent = 'Updating…';
     try {
       const res  = await fetch(N8N_BASE + '/auth/change-password', {
@@ -1537,13 +1543,13 @@
         body: JSON.stringify({ currentPassword: current, newPassword: newPw })
       });
       const data = await res.json();
-      if (!res.ok || data.error) { showErr('err-settings-pw', data.error || 'Password change failed.'); return; }
-      g('settings-pw-current').value = '';
-      g('settings-pw-new').value = '';
-      g('settings-pw-confirm').value = '';
-      showOk('ok-settings-pw', 'Password changed successfully.');
+      if (!res.ok || data.error) { showErr('err-settings-pass', data.error || 'Password change failed.'); return; }
+      g('set-pass-current').value = '';
+      g('set-pass-new').value = '';
+      g('set-pass-new2').value = '';
+      showOk('ok-settings-pass', 'Password changed successfully.');
     } catch(e) {
-      showErr('err-settings-pw', 'Connection error. Please try again.');
+      showErr('err-settings-pass', 'Connection error. Please try again.');
     } finally {
       btn.disabled = false; btn.textContent = 'Update Password';
     }
@@ -1554,7 +1560,7 @@
 
   async function loadTeam() {
     if (!currentUser?.token) return;
-    const list = g('team-member-list');
+    const list = g('team-members-list');
     if (!list) return;
     list.innerHTML = '<p style="color:var(--gray-400);font-size:13px">Loading…</p>';
     clearErr('err-team');
@@ -1573,7 +1579,7 @@
   }
 
   function renderTeam() {
-    const list = g('team-member-list');
+    const list = g('team-members-list');
     if (!list) return;
     if (!teamMembers.length) { list.innerHTML = '<p style="color:var(--gray-400);font-size:13px">No team members yet.</p>'; return; }
     const isOwner = teamMembers.find(m => m.userId === currentUser.userId)?.role === 'owner';
@@ -1601,9 +1607,9 @@
   }
 
   window.doInviteMember = async function() {
-    clearErr('err-team');
-    const email = (g('invite-email')?.value || '').trim().toLowerCase();
-    if (!email || !email.includes('@')) { showErr('err-team', 'Enter a valid email address.'); return; }
+    clearErr('err-team-invite');
+    const email = (g('team-invite-email')?.value || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) { showErr('err-team-invite', 'Enter a valid email address.'); return; }
     const btn = g('btn-invite');
     btn.disabled = true; btn.textContent = 'Sending…';
     try {
@@ -1613,11 +1619,11 @@
         body: JSON.stringify({ email })
       });
       const data = await res.json();
-      if (!res.ok || data.error) { showErr('err-team', data.error || 'Invite failed.'); return; }
-      g('invite-email').value = '';
-      showOk('ok-team', 'Invite sent to ' + email);
+      if (!res.ok || data.error) { showErr('err-team-invite', data.error || 'Invite failed.'); return; }
+      g('team-invite-email').value = '';
+      showOk('ok-team-invite', 'Invite sent to ' + email);
     } catch(e) {
-      showErr('err-team', 'Connection error. Please try again.');
+      showErr('err-team-invite', 'Connection error. Please try again.');
     } finally {
       btn.disabled = false; btn.textContent = 'Send Invite';
     }
@@ -2336,7 +2342,7 @@ ${sectionHeader('Premium Breakdown')}
 
   // ── Notes Manager ─────────────────────────────────────────────
   function notesStorageKey() {
-    return currentUser ? 'pdfnotes_' + currentUser.uid : 'pdfnotes_guest';
+    return currentUser ? 'pdfnotes_' + currentUser.userId : 'pdfnotes_guest';
   }
   function getSavedNotes() {
     try { return JSON.parse(localStorage.getItem(notesStorageKey()) || '[]'); } catch { return []; }
