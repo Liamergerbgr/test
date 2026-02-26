@@ -1102,8 +1102,8 @@
       await sleep(600);
       setStep(3,'done');
       await addUsage(currentUser.uid);
-      if (oldPass && g('save-pass-check-old')?.checked) savePassword(oldPass);
-      if (newPass && g('save-pass-check-new')?.checked) savePassword(newPass);
+      if (oldPass && g('save-pass-check-old')?.checked) savePassword(oldPass, 'old');
+      if (newPass && g('save-pass-check-new')?.checked) savePassword(newPass, 'new');
       if (notes && g('save-note-check')?.checked) saveNote(notes);
       const elapsed = Math.round((Date.now() - startTime) / 1000);
       saveRenewalRecord(result.data?.clientName || 'Unknown Client', elapsed, result.data, result.htmlBody || '', notes);
@@ -1501,27 +1501,28 @@ ${sectionHeader('Premium Breakdown')}
   function clearOk(id) { g(id).className='msg-success'; }
 
   // ── PDF Password Manager ─────────────────────────────────────
-  function passStorageKey() {
-    return currentUser ? 'pdfpasses_' + currentUser.uid : 'pdfpasses_guest';
+  function passStorageKey(side) {
+    const uid = currentUser ? currentUser.uid : 'guest';
+    return 'pdfpasses_' + side + '_' + uid;
   }
-  function getSavedPasswords() {
-    try { return JSON.parse(localStorage.getItem(passStorageKey()) || '[]'); } catch { return []; }
+  function getSavedPasswords(side) {
+    try { return JSON.parse(localStorage.getItem(passStorageKey(side)) || '[]'); } catch { return []; }
   }
-  function savePassword(pw) {
-    if (!pw) return;
-    let list = getSavedPasswords();
-    if (list.includes(pw)) return; // already saved
+  function savePassword(pw, side) {
+    if (!pw || !side) return;
+    let list = getSavedPasswords(side);
+    if (list.includes(pw)) return;
     list.unshift(pw);
-    if (list.length > 20) list = list.slice(0, 20); // cap at 20
-    localStorage.setItem(passStorageKey(), JSON.stringify(list));
+    if (list.length > 20) list = list.slice(0, 20);
+    localStorage.setItem(passStorageKey(side), JSON.stringify(list));
   }
-  function deletePassword(pw) {
-    let list = getSavedPasswords().filter(p => p !== pw);
-    localStorage.setItem(passStorageKey(), JSON.stringify(list));
+  function deletePassword(pw, side) {
+    let list = getSavedPasswords(side).filter(p => p !== pw);
+    localStorage.setItem(passStorageKey(side), JSON.stringify(list));
   }
 
   function renderPassList(which) {
-    const list = getSavedPasswords();
+    const list = getSavedPasswords(which);
     const container = g('pass-saved-list-' + which);
     if (!list.length) { container.innerHTML = ''; return; }
     container.innerHTML = list.map((pw, i) => `
@@ -1559,16 +1560,16 @@ ${sectionHeader('Premium Breakdown')}
 
   window.deleteSavedPass = function(e, which, pw, idx) {
     e.stopPropagation();
-    deletePassword(pw);
-    ['old','new'].forEach(w => {
-      const input = g('pass-' + w);
-      const label = g('pass-trigger-label-' + w);
-      if (input.value === pw) {
-        input.value = '';
-        label.textContent = 'PDF password (if protected)';
-        label.style.color = '';
-      }
-    });
+    deletePassword(pw, which);
+    const input = g('pass-' + which);
+    const label = g('pass-trigger-label-' + which);
+    if (input.value === pw) {
+      input.value = '';
+      label.textContent = 'PDF password (if protected)';
+      label.style.color = '';
+      const saveLbl = g('save-pass-label-' + which);
+      if (saveLbl) saveLbl.style.display = 'none';
+    }
     renderPassList(which);
   };
 
