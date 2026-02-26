@@ -342,7 +342,7 @@
     </div>
   </section>
 
-  <footer><span>&copy; 2026 RenewalScan AI &mdash; Built by <a href="https://TaskAutomateAI.co.za" target="_blank" style="color:inherit;text-decoration:underline;">TaskAutomateAI</a> &mdash; Managed by TaskAutomateAI.co.za</span></footer>
+  <footer><span>&copy; 2026 RenewalScan AI &mdash; Built by <a href="https://TaskAutomateAI.co.za" target="_blank" style="color:inherit;text-decoration:underline;">TaskAutomateAI</a> &mdash; Managed by TaskAutomateAI.co.za &nbsp;&middot;&nbsp; <span class="app-ver"></span></span></footer>
 </div>
 
 <!-- ═══════════════════════════════
@@ -531,7 +531,7 @@
       <a onclick="showPage('privacy')">Privacy Policy</a>
       <a onclick="showPage('terms')">Terms of Service</a>
       <a onclick="showPage('support')">Support</a>
-      &copy; 2026 TaskAutomateAI
+      &copy; 2026 TaskAutomateAI &nbsp;&middot;&nbsp; <span class="app-ver"></span>
     </div>
   </div>
 </div>
@@ -638,7 +638,7 @@
       <a onclick="showPage('privacy')">Privacy Policy</a>
       <a onclick="showPage('terms')">Terms of Service</a>
       <a onclick="showPage('support')">Support</a>
-      &copy; 2026 TaskAutomateAI
+      &copy; 2026 TaskAutomateAI &nbsp;&middot;&nbsp; <span class="app-ver"></span>
     </div>
   </div>
 </div>
@@ -662,7 +662,7 @@
       <a onclick="showPage('privacy')">Privacy Policy</a>
       <a onclick="showPage('terms')">Terms of Service</a>
       <a onclick="showPage('support')">Support</a>
-      &copy; 2026 TaskAutomateAI
+      &copy; 2026 TaskAutomateAI &nbsp;&middot;&nbsp; <span class="app-ver"></span>
     </div>
   </div>
 </div>
@@ -766,6 +766,9 @@
   import {
     getFirestore, doc, getDoc, setDoc, increment, serverTimestamp
   } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+
+  // ── App Version ──────────────────────────────────────────────
+  const APP_VERSION = '0.4.1';
 
   // ─────────────────────────────────────────────────────────────
   // FIREBASE CONFIG
@@ -1505,6 +1508,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     const ta = g('comparison-notes');
     if (ta) ta.addEventListener('focus', renderSavedNotesList);
+    document.querySelectorAll('.app-ver').forEach(el => el.textContent = 'v' + APP_VERSION);
   });
 
 
