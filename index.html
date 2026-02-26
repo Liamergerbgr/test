@@ -496,6 +496,7 @@
         <div class="dash-value" id="dash-count">0</div>
         <div class="dash-card-sub">of <span id="dash-limit">&#8212;</span> included in your plan</div>
         <div class="usage-bar-wrap"><div class="usage-bar" id="dash-bar" style="width:0%"></div></div>
+        <div id="dash-limit-warning" style="display:none;font-size:12px;color:var(--red);margin-top:8px;font-weight:600"></div>
       </div>
       <div class="dash-card">
         <div class="dash-label">Current plan</div>
@@ -840,7 +841,14 @@
       document.getElementById('dash-count').textContent = count;
       document.getElementById('dash-limit').textContent = limit;
       document.getElementById('dash-tier').textContent  = tier.charAt(0).toUpperCase() + tier.slice(1);
-      document.getElementById('dash-bar').style.width   = Math.min(100, Math.round(count/limit*100)) + '%';
+      const pct = Math.min(100, Math.round(count/limit*100));
+      document.getElementById('dash-bar').style.width   = pct + '%';
+      document.getElementById('dash-bar').style.background = pct >= 90 ? 'var(--red)' : pct >= 75 ? 'var(--amber)' : 'var(--blue)';
+      const limitWarning = g('dash-limit-warning');
+      if (limitWarning) {
+        if (pct >= 90) { limitWarning.textContent = pct >= 100 ? 'You\u2019ve reached your monthly limit. Contact us to upgrade.' : 'You\u2019re nearly at your monthly limit. Consider upgrading your plan.'; limitWarning.style.display = 'block'; }
+        else { limitWarning.style.display = 'none'; }
+      }
       loadRenewals();
     } catch(e) { console.warn('Dashboard load failed', e); }
   }
@@ -862,7 +870,12 @@
       const tbody = g('renewals-tbody');
       if (!tbody) return;
       if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--gray-400);font-style:italic">No comparisons yet.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="4" style="padding:36px 20px;text-align:center">
+          <div style="font-size:32px;margin-bottom:10px">&#128196;</div>
+          <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px">No comparisons yet</div>
+          <div style="font-size:13px;color:var(--gray-400);margin-bottom:16px">Upload two policy PDFs to run your first AI comparison</div>
+          <button onclick="showPage('compare')" style="background:var(--blue);color:#fff;border:none;padding:10px 22px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Start Your First Comparison &rarr;</button>
+        </td></tr>`;
         return;
       }
       tbody.innerHTML = list.map((r, i) => {
@@ -1107,6 +1120,9 @@
   function setProc(main, sub) { g('proc-text').textContent=main; g('proc-sub').textContent=sub; }
   const sleep = ms => new Promise(r => setTimeout(r,ms));
 
+  // ── HTML escape helper (prevents XSS from API data) ──────────
+  function esc(s) { const d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
+
   // ── Render Results ───────────────────────────────────────────
   function renderResults(d, targetId = 'results-output') {
     if (!d) { g(targetId).innerHTML = '<p style="color:var(--gray-600)">No data returned.</p>'; return; }
@@ -1132,10 +1148,10 @@
         const siOld     = anyHasSI ? `<td style="text-align:right;color:var(--gray-600)">${c.oldInsuredAmountFormatted||'—'}</td>` : '';
         const siNew     = anyHasSI ? `<td style="text-align:right;color:${siColor};font-weight:${siChanged?'700':'400'}">${c.newInsuredAmountFormatted||'—'}${siArrow}</td>` : '';
         rows += `<tr>
-          <td style="font-weight:600">${c.item}</td>
-          <td>${c.oldPriceFormatted||'R0.00'}</td>
-          <td>${c.newPriceFormatted||'R0.00'}</td>
-          <td><span style="color:${cc};font-weight:700">${none?'&mdash;':ar+' '+c.differenceFormatted}</span></td>
+          <td style="font-weight:600">${esc(c.item)}</td>
+          <td>${esc(c.oldPriceFormatted||'R0.00')}</td>
+          <td>${esc(c.newPriceFormatted||'R0.00')}</td>
+          <td><span style="color:${cc};font-weight:700">${none?'&mdash;':ar+' '+esc(c.differenceFormatted)}</span></td>
           ${siOld}${siNew}
         </tr>`;
       });
@@ -1168,19 +1184,24 @@
       </div>`;
     }
 
+    const pctChange = (d.oldTotal && d.newTotal && d.oldTotal !== 0)
+      ? Math.abs(Math.round(((d.newTotal - d.oldTotal) / d.oldTotal) * 100))
+      : null;
+    const pctLabel = pctChange !== null ? ` (${pctChange}% ${inc?'increase':'decrease'})` : '';
+
     g(targetId).innerHTML = `
       <div class="result-box">
         <div class="result-head">
-          <div class="result-client">${d.clientName||'Policy Comparison'}</div>
-          <div class="result-period">${d.oldPolicyPeriod} &rarr; ${d.newPolicyPeriod}</div>
+          <div class="result-client">${esc(d.clientName||'Policy Comparison')}</div>
+          <div class="result-period">${esc(d.oldPolicyPeriod)} &rarr; ${esc(d.newPolicyPeriod)}</div>
         </div>
         <div class="result-body">
           <div class="totals-row">
-            <div class="total-box old"><div class="total-box-label">Previous Premium</div><div class="total-box-amount">${d.oldTotalFormatted}</div></div>
-            <div class="total-box new"><div class="total-box-label">New Premium</div><div class="total-box-amount">${d.newTotalFormatted}</div></div>
+            <div class="total-box old"><div class="total-box-label">Previous Premium</div><div class="total-box-amount">${esc(d.oldTotalFormatted)}</div></div>
+            <div class="total-box new"><div class="total-box-label">New Premium</div><div class="total-box-amount">${esc(d.newTotalFormatted)}</div></div>
           </div>
           <div class="change-banner ${inc?'inc':'dec'}">
-            <span class="cb-text">${arrow} Overall Change: ${d.totalDifferenceFormatted} (${inc?'Increase':'Decrease'})</span>
+            <span class="cb-text">${arrow} Overall Change: ${esc(d.totalDifferenceFormatted)}${pctLabel}</span>
           </div>
           <div class="sect-title">Cover Items with Changes</div>
           <table class="changes-tbl">
