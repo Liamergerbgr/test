@@ -672,7 +672,7 @@
     </div>
 
     <div style="margin-top:28px">
-      <div class="dash-section-title">Renewals Processed <span id="dash-history-count"></span></div>
+      <div class="dash-section-title">Renewals Processed <span id="dash-history-count"></span><button id="btn-clear-history" onclick="clearAllHistory()" style="display:none;margin-left:auto;background:none;border:1px solid var(--gray-200);color:var(--gray-600);font-size:12px;font-weight:500;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:Inter,sans-serif">Clear all</button></div>
       <div style="background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-200);overflow:hidden">
         <table style="width:100%;border-collapse:collapse">
           <thead>
@@ -931,7 +931,7 @@
   } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.5.3';
+  const APP_VERSION = '0.5.4';
 
   // ─────────────────────────────────────────────────────────────
   // FIREBASE CONFIG
@@ -1084,6 +1084,8 @@
       if (!tbody) return;
       const countEl = g('dash-history-count');
       if (countEl) countEl.textContent = list.length ? list.length + ' total' : '';
+      const clearBtn = g('btn-clear-history');
+      if (clearBtn) clearBtn.style.display = list.length ? 'inline-block' : 'none';
       if (!list.length) {
         tbody.innerHTML = `<tr><td colspan="4" style="padding:36px 20px;text-align:center">
           <div style="font-size:32px;margin-bottom:10px">&#128196;</div>
@@ -1096,9 +1098,10 @@
       tbody.innerHTML = list.map((r, i) => {
         const date = r.completedAt ? new Date(r.completedAt).toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
         const dur = r.durationSecs ? (r.durationSecs >= 60 ? Math.floor(r.durationSecs/60) + 'm ' + (r.durationSecs%60) + 's' : r.durationSecs + 's') : '—';
+        const delBtn = `<button onclick="deleteRenewal(${i})" title="Delete this record" style="background:none;border:1px solid var(--gray-200);color:var(--gray-400);padding:5px 9px;border-radius:6px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;margin-left:6px" onmouseover="this.style.borderColor='#dc2626';this.style.color='#dc2626'" onmouseout="this.style.borderColor='var(--gray-200)';this.style.color='var(--gray-400)'">&#128465;</button>`;
         const viewBtn = r.result
-          ? `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100);text-align:right"><button onclick="viewStoredComparison(${i})" style="background:var(--blue);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">View</button></td>`
-          : `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100)"></td>`;
+          ? `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100);text-align:right"><button onclick="viewStoredComparison(${i})" style="background:var(--blue);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">View</button>${delBtn}</td>`
+          : `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100);text-align:right">${delBtn}</td>`;
         return `<tr>
           <td style="padding:11px 14px;font-size:13px;font-weight:600;color:var(--navy);border-bottom:1px solid var(--gray-100)">${r.clientName||'—'}</td>
           <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100)">${date}</td>
@@ -1108,6 +1111,21 @@
       }).join('');
     } catch(e) { console.warn('Failed to load renewals', e); }
   }
+
+  window.deleteRenewal = function(i) {
+    try {
+      const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
+      list.splice(i, 1);
+      localStorage.setItem(renewalsKey(), JSON.stringify(list));
+      loadRenewals();
+    } catch(e) { console.warn('Failed to delete renewal record', e); }
+  };
+
+  window.clearAllHistory = function() {
+    if (!confirm('Clear all renewal history? This cannot be undone.')) return;
+    localStorage.removeItem(renewalsKey());
+    loadRenewals();
+  };
 
   async function addUsage(uid) {
     try {
