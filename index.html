@@ -136,16 +136,26 @@
     .dash-wrap { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
     .dash-welcome { font-size: 26px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
     .dash-sub { font-size: 15px; color: var(--gray-600); margin-bottom: 28px; }
-    .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 28px; }
-    .dash-card { background: #fff; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--gray-200); }
-    .dash-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-400); margin-bottom: 10px; }
-    .dash-value { font-size: 36px; font-weight: 800; color: var(--navy); line-height: 1; }
-    .dash-card-sub { font-size: 13px; color: var(--gray-600); margin-top: 6px; }
-    .usage-bar-wrap { margin-top: 14px; background: var(--gray-100); border-radius: 99px; height: 8px; overflow: hidden; }
+    .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 28px; }
+    .dash-card { background: #fff; border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); border: 1px solid var(--gray-200); position: relative; overflow: hidden; }
+    .dash-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--blue); border-radius: var(--radius) var(--radius) 0 0; }
+    .dash-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-400); margin-bottom: 12px; }
+    .dash-value { font-size: 40px; font-weight: 800; color: var(--navy); line-height: 1; }
+    .dash-card-sub { font-size: 13px; color: var(--gray-600); margin-top: 8px; }
+    .usage-bar-wrap { margin-top: 16px; background: var(--gray-100); border-radius: 99px; height: 6px; overflow: hidden; }
     .usage-bar { height: 100%; background: var(--blue); border-radius: 99px; transition: width .6s ease; }
+    .dash-plan-name { font-size: 26px; font-weight: 800; color: var(--navy); margin-top: 4px; margin-bottom: 10px; }
+    .dash-active-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 99px; }
+    .dash-active-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,.25); animation: pulse-green 2s infinite; }
+    @keyframes pulse-green { 0%,100% { box-shadow: 0 0 0 2px rgba(34,197,94,.25); } 50% { box-shadow: 0 0 0 4px rgba(34,197,94,.1); } }
+    .dash-plan-limit { font-size: 12px; color: var(--gray-400); margin-top: 8px; }
+    .dash-upgrade-link { display: inline-block; margin-top: 12px; font-size: 12px; font-weight: 600; color: var(--blue); cursor: pointer; text-decoration: none; }
+    .dash-upgrade-link:hover { text-decoration: underline; }
     .dash-cta { background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 100%); border-radius: var(--radius); padding: 32px; color: #fff; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
     .dash-cta h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
     .dash-cta p { font-size: 14px; color: #94a3b8; }
+    .dash-section-title { font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .dash-section-title span { font-size: 12px; font-weight: 500; color: var(--gray-400); }
     .btn-white { background: #fff; color: var(--navy); border: none; padding: 12px 24px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; transition: background .15s; white-space: nowrap; font-family: 'Inter', sans-serif; }
     .btn-white:hover { background: var(--gray-100); }
 
@@ -643,8 +653,10 @@
       </div>
       <div class="dash-card">
         <div class="dash-label">Current plan</div>
-        <div class="dash-value" style="font-size:22px;margin-top:4px" id="dash-tier">Starter</div>
-        <div class="dash-card-sub">Active</div>
+        <div class="dash-plan-name" id="dash-tier">Starter</div>
+        <div class="dash-active-badge"><div class="dash-active-dot"></div>Active</div>
+        <div class="dash-plan-limit" id="dash-plan-limit"></div>
+        <a class="dash-upgrade-link" onclick="showPage('subscribe')">View plans &rarr;</a>
       </div>
     </div>
     <div class="dash-cta">
@@ -653,7 +665,7 @@
     </div>
 
     <div style="margin-top:28px">
-      <div style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px">Renewals Processed</div>
+      <div class="dash-section-title">Renewals Processed <span id="dash-history-count"></span></div>
       <div style="background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-200);overflow:hidden">
         <table style="width:100%;border-collapse:collapse">
           <thead>
@@ -912,7 +924,7 @@
   } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.5.1';
+  const APP_VERSION = '0.5.2';
 
   // ─────────────────────────────────────────────────────────────
   // FIREBASE CONFIG
@@ -1023,6 +1035,8 @@
       document.getElementById('dash-count').textContent = count;
       document.getElementById('dash-limit').textContent = limit;
       document.getElementById('dash-tier').textContent  = tier.charAt(0).toUpperCase() + tier.slice(1);
+      const planLimitEl = document.getElementById('dash-plan-limit');
+      if (planLimitEl) planLimitEl.textContent = limit + ' comparisons per month';
       const pct = Math.min(100, Math.round(count/limit*100));
       document.getElementById('dash-bar').style.width   = pct + '%';
       document.getElementById('dash-bar').style.background = pct >= 90 ? 'var(--red)' : pct >= 75 ? 'var(--amber)' : 'var(--blue)';
@@ -1051,6 +1065,8 @@
       const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
       const tbody = g('renewals-tbody');
       if (!tbody) return;
+      const countEl = g('dash-history-count');
+      if (countEl) countEl.textContent = list.length ? list.length + ' total' : '';
       if (!list.length) {
         tbody.innerHTML = `<tr><td colspan="4" style="padding:36px 20px;text-align:center">
           <div style="font-size:32px;margin-bottom:10px">&#128196;</div>
