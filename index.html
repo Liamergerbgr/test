@@ -571,8 +571,11 @@
             </div>
             <div id="pass-dropdown-old" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(15,39,68,.12);z-index:200;overflow:hidden">
               <div id="pass-saved-list-old"></div>
-              <div style="padding:8px">
-                <input type="password" id="pass-old" placeholder="Enter new password…" style="font-size:13px;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:6px;width:100%;font-family:Inter,sans-serif;outline:none;color:var(--gray-700)" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="onPassInput('old')" />
+              <div style="padding:8px 8px 4px">
+                <input type="password" id="pass-old" placeholder="Enter password…" style="font-size:13px;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:6px;width:100%;font-family:Inter,sans-serif;outline:none;color:var(--gray-700)" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="onPassInput('old')" />
+              </div>
+              <div style="padding:0 8px 8px">
+                <label id="save-pass-label-old" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--gray-500);cursor:pointer;user-select:none"><input type="checkbox" id="save-pass-check-old" style="cursor:pointer;accent-color:var(--blue)"> Save this password for future use</label>
               </div>
             </div>
           </div>
@@ -593,8 +596,11 @@
             </div>
             <div id="pass-dropdown-new" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(15,39,68,.12);z-index:200;overflow:hidden">
               <div id="pass-saved-list-new"></div>
-              <div style="padding:8px">
-                <input type="password" id="pass-new" placeholder="Enter new password…" style="font-size:13px;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:6px;width:100%;font-family:Inter,sans-serif;outline:none;color:var(--gray-700)" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="onPassInput('new')" />
+              <div style="padding:8px 8px 4px">
+                <input type="password" id="pass-new" placeholder="Enter password…" style="font-size:13px;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:6px;width:100%;font-family:Inter,sans-serif;outline:none;color:var(--gray-700)" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="onPassInput('new')" />
+              </div>
+              <div style="padding:0 8px 8px">
+                <label id="save-pass-label-new" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--gray-500);cursor:pointer;user-select:none"><input type="checkbox" id="save-pass-check-new" style="cursor:pointer;accent-color:var(--blue)"> Save this password for future use</label>
               </div>
             </div>
           </div>
@@ -1093,8 +1099,8 @@
       await sleep(600);
       setStep(3,'done');
       await addUsage(currentUser.uid);
-      if (oldPass) savePassword(oldPass);
-      if (newPass) savePassword(newPass);
+      if (oldPass && g('save-pass-check-old')?.checked) savePassword(oldPass);
+      if (newPass && g('save-pass-check-new')?.checked) savePassword(newPass);
       if (notes && g('save-note-check')?.checked) saveNote(notes);
       const elapsed = Math.round((Date.now() - startTime) / 1000);
       saveRenewalRecord(result.data?.clientName || 'Unknown Client', elapsed, result.data, result.htmlBody || '');
@@ -1275,11 +1281,14 @@
     const nl = g('notes-saved-list'); if (nl) nl.style.display = 'none';
     const snl = g('save-note-label'); if (snl) snl.style.display = 'none';
     const snc = g('save-note-check'); if (snc) snc.checked = false;
+    ['old','new'].forEach(w => {
+      const spl = g('save-pass-label-' + w); if (spl) spl.style.display = 'none';
+      const spc = g('save-pass-check-' + w); if (spc) spc.checked = false;
+    });
     clearErr('err-compare');
     g('results-panel').classList.remove('show');
     g('upload-panel').style.display = 'block';
     resetSteps();
-    autoFillSavedPasswords();
   };
 
   function autoFillSavedPasswords() {
@@ -1404,6 +1413,8 @@
       label.textContent = 'PDF password (if protected)';
       label.style.color = '';
     }
+    const saveLbl = g('save-pass-label-' + which);
+    if (saveLbl) saveLbl.style.display = val ? 'flex' : 'none';
   };
 
   // Close dropdowns when clicking outside
