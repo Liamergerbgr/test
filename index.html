@@ -1151,74 +1151,80 @@
   let pendingResetToken  = null;
   let pendingInviteToken = null;
 
+  function dismissLoader() {
+    const loader = document.getElementById('page-loader');
+    if (loader) { loader.classList.add('hidden'); setTimeout(() => loader.remove(), 300); }
+  }
+
   async function initAuth() {
-    const params = new URLSearchParams(window.location.search);
+    try {
+      const params = new URLSearchParams(window.location.search);
 
-    // ?verify=TOKEN — call verify endpoint then go to login
-    const verifyToken = params.get('verify');
-    if (verifyToken) {
-      try {
-        await fetch(N8N_BASE + '/auth/verify-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: verifyToken })
-        });
-      } catch {}
-      history.replaceState(null, '', location.pathname);
-      sessionStorage.setItem('rs_verified', '1');
-    }
+      // ?verify=TOKEN — call verify endpoint then go to login
+      const verifyToken = params.get('verify');
+      if (verifyToken) {
+        try {
+          await fetch(N8N_BASE + '/auth/verify-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: verifyToken })
+          });
+        } catch {}
+        history.replaceState(null, '', location.pathname);
+        sessionStorage.setItem('rs_verified', '1');
+      }
 
-    // ?reset=TOKEN — store token, show reset-password page
-    const resetToken = params.get('reset');
-    if (resetToken) {
-      pendingResetToken = resetToken;
-      history.replaceState(null, '', location.pathname);
-      const loader = document.getElementById('page-loader');
-      if (loader) { loader.classList.add('hidden'); setTimeout(() => loader.remove(), 300); }
-      showPage('reset-password');
-      return;
-    }
+      // ?reset=TOKEN — store token, show reset-password page
+      const resetToken = params.get('reset');
+      if (resetToken) {
+        pendingResetToken = resetToken;
+        history.replaceState(null, '', location.pathname);
+        showPage('reset-password');
+        return;
+      }
 
-    // ?invite=TOKEN — store token, show accept-invite page
-    const inviteToken = params.get('invite');
-    if (inviteToken) {
-      pendingInviteToken = inviteToken;
-      history.replaceState(null, '', location.pathname);
+      // ?invite=TOKEN — store token, show accept-invite page
+      const inviteToken = params.get('invite');
+      if (inviteToken) {
+        pendingInviteToken = inviteToken;
+        history.replaceState(null, '', location.pathname);
+        const session = loadSession();
+        if (session && session.token) {
+          currentUser = session;
+          setNav(true, session.name || session.email);
+          const lp = g('invite-login-prompt'); if (lp) lp.style.display = 'none';
+          const ab = g('invite-accept-btn');   if (ab) ab.style.display = 'block';
+        } else {
+          const lp = g('invite-login-prompt'); if (lp) lp.style.display = 'block';
+          const ab = g('invite-accept-btn');   if (ab) ab.style.display = 'none';
+        }
+        showPage('accept-invite');
+        return;
+      }
+
       const session = loadSession();
       if (session && session.token) {
         currentUser = session;
-        setNav(true, session.name || session.email);
-        g('invite-login-prompt').style.display = 'none';
-        g('invite-accept-btn').style.display   = 'block';
+        const name = session.name || session.email?.split('@')[0] || 'User';
+        setNav(true, name);
+        loadDashboard();
+        const savedPage = sessionStorage.getItem('rs_page');
+        const dest = (savedPage && !['login','signup','verify'].includes(savedPage)) ? savedPage : 'dashboard';
+        showPage(dest);
       } else {
-        g('invite-login-prompt').style.display = 'block';
-        g('invite-accept-btn').style.display   = 'none';
+        currentUser = null;
+        setNav(false);
+        const savedPage = sessionStorage.getItem('rs_page');
+        const publicPages = ['landing','why','subscribe','terms','privacy','support'];
+        const dest = (savedPage && publicPages.includes(savedPage)) ? savedPage : 'landing';
+        showPage(dest);
       }
-      const loader = document.getElementById('page-loader');
-      if (loader) { loader.classList.add('hidden'); setTimeout(() => loader.remove(), 300); }
-      showPage('accept-invite');
-      return;
+    } catch(e) {
+      console.error('initAuth error:', e);
+      showPage('landing');
+    } finally {
+      dismissLoader();
     }
-
-    const session = loadSession();
-    if (session && session.token) {
-      currentUser = session;
-      const name = session.name || session.email?.split('@')[0] || 'User';
-      setNav(true, name);
-      loadDashboard();
-      const savedPage = sessionStorage.getItem('rs_page');
-      const dest = (savedPage && !['login','signup','verify'].includes(savedPage)) ? savedPage : 'dashboard';
-      showPage(dest);
-    } else {
-      currentUser = null;
-      setNav(false);
-      const savedPage = sessionStorage.getItem('rs_page');
-      const publicPages = ['landing','why','subscribe','terms','privacy','support'];
-      const dest = (savedPage && publicPages.includes(savedPage)) ? savedPage : 'landing';
-      showPage(dest);
-    }
-    const loader = document.getElementById('page-loader');
-    if (loader) { loader.classList.add('hidden'); setTimeout(() => loader.remove(), 300); }
   }
   initAuth();
 
