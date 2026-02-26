@@ -231,6 +231,11 @@
     .changes-tbl tr:nth-child(even) td { background: var(--gray-50); }
     .toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: #fff; padding: 12px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); transform: translateY(80px); opacity: 0; transition: all .3s; z-index: 999; }
     .toast.show { transform: translateY(0); opacity: 1; }
+    .update-bar { position: fixed; bottom: 24px; left: 24px; background: var(--navy); color: #fff; padding: 12px 18px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 12px; transform: translateY(80px); opacity: 0; transition: all .3s; z-index: 999; pointer-events: none; }
+    .update-bar.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .update-bar-btn { background: var(--blue); color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: Inter,sans-serif; transition: background .15s; }
+    .update-bar-btn:hover { background: var(--blue-light); }
+    .update-bar-dismiss { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 18px; line-height: 1; padding: 0 2px; font-family: Inter,sans-serif; }
 
     /* AUTH FOOTER */
     .auth-footer { text-align:center; padding:20px 24px; font-size:12px; color:var(--gray-400); border-top:1px solid var(--gray-100); background:#fff; margin-top:40px; }
@@ -274,6 +279,11 @@
   </div>
 </nav>
 <div class="toast" id="toast">&#10003; HTML copied — paste into Gmail or Outlook</div>
+<div class="update-bar" id="update-bar">
+  <span>&#8593; A new version is available</span>
+  <button class="update-bar-btn" onclick="location.reload()">Refresh now</button>
+  <button class="update-bar-dismiss" onclick="g('update-bar').classList.remove('show')" title="Dismiss">&#x2715;</button>
+</div>
 
 <!-- ═══════════════════════════════
      LANDING
@@ -554,6 +564,7 @@
 
     <div id="upload-panel">
       <div class="msg-error" id="err-compare"></div>
+      <button id="btn-retry" onclick="retryComparison()" style="display:none;margin-top:10px;padding:10px 22px;background:var(--gray-100);color:var(--navy);border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;transition:background .15s" onmouseover="this.style.background='var(--gray-200)'" onmouseout="this.style.background='var(--gray-100)'">&#8635; Try Again</button>
       <div class="upload-grid">
         <div>
           <label style="font-size:13px;font-weight:600;color:var(--navy);display:block;margin-bottom:8px">Old / Existing Policy</label>
@@ -768,7 +779,7 @@
   } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.4.3';
+  const APP_VERSION = '0.5.0';
 
   // ─────────────────────────────────────────────────────────────
   // FIREBASE CONFIG
@@ -789,10 +800,38 @@
   const auth = getAuth(app);
   const db   = getFirestore(app);
 
-  let currentUser    = null;
-  let smsConfirm     = null;
-  let htmlToCopy     = '';
-  let currentPage    = 'landing';
+  let currentUser     = null;
+  let smsConfirm      = null;
+  let htmlToCopy      = '';
+  let currentPage     = 'landing';
+  let lastOldData     = null;  // stored after successful PDF extraction, used for retry
+  let lastNewData     = null;
+  let updateAvailable = false;
+  let knownEtag       = null;
+
+  // ── Auto-update detection ────────────────────────────────────
+  // HEAD request every 5 min — when Cloudflare deploys a new version
+  // the ETag changes; show a banner (held until comparison finishes).
+  async function checkForUpdate() {
+    try {
+      const resp = await fetch(location.pathname, {
+        method: 'HEAD',
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
+        cache: 'no-store'
+      });
+      const etag = resp.headers.get('etag') || resp.headers.get('last-modified');
+      if (!etag) return;
+      if (!knownEtag) { knownEtag = etag; return; }
+      if (etag !== knownEtag) {
+        updateAvailable = true;
+        if (!g('proc-panel').classList.contains('show')) {
+          g('update-bar').classList.add('show');
+        }
+      }
+    } catch { /* ignore network errors */ }
+  }
+  checkForUpdate();
+  setInterval(checkForUpdate, 5 * 60 * 1000);
 
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -1043,6 +1082,9 @@
   window.onFileSelect = function(w) {
     const f = g('file-' + w).files[0];
     if (!f) return;
+    if (f.size > 10 * 1024 * 1024) {
+      showErr('err-compare', '"' + f.name + '" is very large (' + (f.size/1024/1024).toFixed(1) + ' MB) and may fail to process. Try a smaller file.');
+    }
     g('zone-' + w).classList.add('loaded');
     g('fn-' + w).textContent = '\u2713 ' + f.name;
     checkFiles();
@@ -1067,6 +1109,7 @@
     const oldFile = g('file-old').files[0];
     const newFile = g('file-new').files[0];
     clearErr('err-compare');
+    g('btn-retry').style.display = 'none';
     g('upload-panel').style.display = 'none';
     g('proc-panel').classList.add('show');
     g('results-panel').classList.remove('show');
@@ -1074,50 +1117,118 @@
     const startTime = Date.now();
 
     try {
-      // Step 1
+      // Step 1 — extract both PDFs; collect all errors before failing
       setProc('Extracting text from PDFs...', 'Reading policy documents');
       const oldPass = g('pass-old').value || '';
       const newPass = g('pass-new').value || '';
-      const [oldText, newText] = await Promise.all([extractPdf(oldFile, oldPass), extractPdf(newFile, newPass)]);
-      if (!oldText) throw new Error('Could not extract text from the old policy PDF. The file may be image-based.');
-      if (!newText) throw new Error('Could not extract text from the new policy PDF. The file may be image-based.');
+
+      const [oldResult, newResult] = await Promise.allSettled([
+        extractPdf(oldFile, oldPass),
+        extractPdf(newFile, newPass)
+      ]);
+      const errs = [];
+      if (oldResult.status === 'rejected') errs.push('Old policy: ' + oldResult.reason.message);
+      else if (!oldResult.value) errs.push('Old policy: Could not extract text. The file may be image-based.');
+      if (newResult.status === 'rejected') errs.push('New policy: ' + newResult.reason.message);
+      else if (!newResult.value) errs.push('New policy: Could not extract text. The file may be image-based.');
+      if (errs.length) throw new Error(errs.join('\n'));
+
+      const oldText = oldResult.value;
+      const newText = newResult.value;
+      // Store for retry — extraction succeeded, so any later failure can retry without re-upload
+      lastOldData = { text: oldText, pass: oldPass };
+      lastNewData = { text: newText, pass: newPass };
       setStep(1,'done'); setStep(2,'active');
 
-      // Step 2
-      setProc('Analysing policies with AI...', 'This usually takes 30\u201360 seconds');
-      const token = await currentUser.getIdToken();
+      // Steps 2 & 3
       const notes = g('comparison-notes').value.trim();
-      const resp  = await fetch('/api/compare', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ oldPolicyText: oldText, newPolicyText: newText, notes })
-      });
-      const result = await resp.json();
-      if (!resp.ok) throw new Error(result.error || 'Processing failed. Please try again.');
-      setStep(2,'done'); setStep(3,'active');
-
-      // Step 3
-      setProc('Building your report...', 'Almost done');
-      htmlToCopy = buildEmailHtml(result.data, notes);
-      await sleep(600);
-      setStep(3,'done');
-      await addUsage(currentUser.uid);
-      if (oldPass && g('save-pass-check-old')?.checked) savePassword(oldPass, 'old');
-      if (newPass && g('save-pass-check-new')?.checked) savePassword(newPass, 'new');
-      if (notes && g('save-note-check')?.checked) saveNote(notes);
-      const elapsed = Math.round((Date.now() - startTime) / 1000);
-      saveRenewalRecord(result.data?.clientName || 'Unknown Client', elapsed, result.data, result.htmlBody || '', notes);
-      renderResults(result.data, 'results-output', notes);
-      g('proc-panel').classList.remove('show');
-      g('results-panel').classList.add('show');
+      await submitComparison(oldText, newText, notes, oldPass, newPass, startTime);
 
     } catch(e) {
       g('proc-panel').classList.remove('show');
       g('upload-panel').style.display = 'block';
-      showErr('err-compare', e.message || 'An unexpected error occurred. Please try again.');
+      showErrMulti('err-compare', e);
+      if (lastOldData && lastNewData) g('btn-retry').style.display = 'inline-block';
       resetSteps();
     }
   };
+
+  // ── Retry (skips re-upload, uses stored extraction) ──────────
+  window.retryComparison = async function() {
+    if (!lastOldData || !lastNewData) return;
+    clearErr('err-compare');
+    g('btn-retry').style.display = 'none';
+    g('upload-panel').style.display = 'none';
+    g('proc-panel').classList.add('show');
+    g('results-panel').classList.remove('show');
+    setStep(1,'done'); setStep(2,'active'); setStep(3,'');
+    const notes = g('comparison-notes').value.trim();
+    try {
+      await submitComparison(lastOldData.text, lastNewData.text, notes, lastOldData.pass, lastNewData.pass, Date.now());
+    } catch(e) {
+      g('proc-panel').classList.remove('show');
+      g('upload-panel').style.display = 'block';
+      showErrMulti('err-compare', e);
+      g('btn-retry').style.display = 'inline-block';
+      resetSteps();
+      setStep(1,'done');
+    }
+  };
+
+  // ── Submit to API (shared by runComparison + retryComparison) ─
+  async function submitComparison(oldText, newText, notes, oldPass, newPass, startTime) {
+    setProc('Analysing policies with AI...', 'This usually takes 30\u201360 seconds');
+    const token = await currentUser.getIdToken();
+
+    // 3-minute timeout via AbortController
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 180000);
+    let resp;
+    try {
+      resp = await fetch('/api/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ oldPolicyText: oldText, newPolicyText: newText, notes }),
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+
+    const result = await resp.json();
+    if (!resp.ok) throw new Error(result.error || 'Processing failed. Please try again.');
+    setStep(2,'done'); setStep(3,'active');
+
+    setProc('Building your report...', 'Almost done');
+    htmlToCopy = buildEmailHtml(result.data, notes);
+    await sleep(600);
+    setStep(3,'done');
+    await addUsage(currentUser.uid);
+    if (oldPass && g('save-pass-check-old')?.checked) savePassword(oldPass, 'old');
+    if (newPass && g('save-pass-check-new')?.checked) savePassword(newPass, 'new');
+    if (notes && g('save-note-check')?.checked) saveNote(notes);
+    const elapsed = Math.round((Date.now() - startTime) / 1000);
+    saveRenewalRecord(result.data?.clientName || 'Unknown Client', elapsed, result.data, result.htmlBody || '', notes);
+    renderResults(result.data, 'results-output', notes);
+    g('proc-panel').classList.remove('show');
+    g('results-panel').classList.add('show');
+    if (updateAvailable) g('update-bar').classList.add('show');
+  }
+
+  // ── Error helper — handles AbortError, TypeError, multiline ──
+  function showErrMulti(id, e) {
+    let msg;
+    if (e.name === 'AbortError') {
+      msg = 'Request timed out after 3 minutes. Please try again.';
+    } else if (e.name === 'TypeError') {
+      msg = 'Could not connect. Check your internet connection and try again.';
+    } else {
+      msg = e.message || 'An unexpected error occurred. Please try again.';
+    }
+    const el = g(id);
+    el.innerHTML = msg.split('\n').map(l => l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')).join('<br>');
+    el.className = 'msg-error show';
+  }
 
   function setStep(n, state) {
     const c  = g('ps'+n), l = g('pl'+n), conn = g('pc'+n);
@@ -1437,6 +1548,9 @@ ${sectionHeader('Premium Breakdown')}
 
   window.resetCompare = function() {
     htmlToCopy = '';
+    lastOldData = null;
+    lastNewData = null;
+    g('btn-retry').style.display = 'none';
     ['old','new'].forEach(w => {
       g('zone-'+w).classList.remove('loaded');
       g('fn-'+w).textContent = '';
