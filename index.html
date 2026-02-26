@@ -296,6 +296,32 @@
     .trust-wrap ul { padding-left:20px; }
     .trust-back { display:inline-flex; align-items:center; gap:6px; color:var(--blue); font-size:14px; font-weight:600; cursor:pointer; margin-bottom:28px; background:none; border:none; font-family:'Inter',sans-serif; padding:0; }
     .trust-back:hover { text-decoration:underline; }
+
+    /* SETTINGS PAGE */
+    .settings-section { background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--gray-200); padding:28px; margin-bottom:20px; }
+    .settings-section-title { font-size:15px; font-weight:700; color:var(--navy); margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--gray-100); }
+    .settings-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:600px) { .settings-row { grid-template-columns:1fr; } }
+    .page-title-bar { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+    .page-back-btn { background:none; border:none; color:var(--blue); font-size:14px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; padding:0; }
+    .page-back-btn:hover { text-decoration:underline; }
+
+    /* TEAM PAGE */
+    .team-member-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--gray-100); gap:12px; flex-wrap:wrap; }
+    .team-member-row:last-child { border-bottom:none; }
+    .member-info { display:flex; align-items:center; gap:12px; }
+    .member-avatar { width:38px; height:38px; border-radius:50%; background:var(--blue); color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .member-name { font-size:14px; font-weight:600; color:var(--navy); }
+    .member-email { font-size:12px; color:var(--gray-400); margin-top:2px; }
+    .member-role-badge { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; padding:3px 9px; border-radius:99px; }
+    .role-owner { background:#eff6ff; color:var(--blue); }
+    .role-admin { background:#f0fdf4; color:var(--green); }
+    .role-member { background:var(--gray-100); color:var(--gray-600); }
+    .member-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .btn-sm { font-size:12px; font-weight:600; padding:5px 12px; border-radius:6px; cursor:pointer; border:1px solid var(--gray-200); background:#fff; color:var(--gray-700); font-family:'Inter',sans-serif; transition:all .15s; }
+    .btn-sm:hover { background:var(--gray-100); }
+    .btn-sm-danger { border-color:#fca5a5; color:#dc2626; }
+    .btn-sm-danger:hover { background:#fef2f2; border-color:#dc2626; }
   </style>
 </head>
 <body>
@@ -320,6 +346,8 @@
       </div>
       <button class="nav-link" onclick="showPage('dashboard')">Dashboard</button>
       <button class="nav-link" onclick="showPage('compare')">Renewals</button>
+      <button class="nav-link" onclick="showPage('team')">Team</button>
+      <button class="nav-link" onclick="showPage('settings')">Settings</button>
       <button class="nav-signout" onclick="doSignOut()">Sign out</button>
     </div>
   </div>
@@ -908,13 +936,165 @@
 </div>
 
 <!-- ═══════════════════════════════
+     RESET PASSWORD
+═══════════════════════════════ -->
+<div class="page page-auth" id="page-reset-password">
+  <div class="auth-left">
+    <div class="auth-left-logo">RenewalScan<span>AI</span></div>
+    <h2>Set a new password</h2>
+    <p>Choose a strong password for your account. You'll use this to sign in from now on.</p>
+    <div class="auth-features">
+      <div class="auth-feature">
+        <div class="auth-feature-icon">&#128274;</div>
+        <div class="auth-feature-text"><strong>Secure by default</strong><span>Passwords are hashed and never stored in plain text</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <div class="auth-form-title">Reset your password</div>
+      <div class="auth-form-sub">Enter your new password below</div>
+      <div class="msg-error" id="err-reset"></div>
+      <div class="msg-success" id="ok-reset"></div>
+      <div class="form-group"><label>New password</label><input type="password" id="r-pass" placeholder="At least 8 characters" /></div>
+      <div class="form-group"><label>Confirm password</label><input type="password" id="r-pass2" placeholder="Repeat new password" onkeydown="if(event.key==='Enter')doResetPassword()" /></div>
+      <button class="btn-full" id="btn-reset-pass" onclick="doResetPassword()">Set new password</button>
+      <div class="auth-link"><a onclick="showPage('login')">Back to sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     ACCEPT INVITE
+═══════════════════════════════ -->
+<div class="page page-auth" id="page-accept-invite">
+  <div class="auth-left">
+    <div class="auth-left-logo">RenewalScan<span>AI</span></div>
+    <h2>You've been invited</h2>
+    <p>Accept your invitation to join a team on RenewalScan AI and access shared comparisons.</p>
+    <div class="auth-features">
+      <div class="auth-feature">
+        <div class="auth-feature-icon">&#128101;</div>
+        <div class="auth-feature-text"><strong>Team access</strong><span>Share your plan's comparison quota with your team</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap" style="text-align:center">
+      <div class="verify-icon-wrap">&#128231;</div>
+      <div class="auth-form-title">Team Invitation</div>
+      <p style="font-size:14px;color:var(--gray-600);margin:10px 0 28px;line-height:1.8">You have been invited to join a team on RenewalScan AI.</p>
+      <div class="msg-error" id="err-invite"></div>
+      <div class="msg-success" id="ok-invite"></div>
+      <div id="invite-login-prompt" style="display:none">
+        <p style="font-size:13px;color:var(--gray-600);margin-bottom:16px">Sign in or create an account to accept this invitation.</p>
+        <button class="btn-full" onclick="showPage('login')">Sign in</button>
+        <button class="btn-secondary-full" onclick="showPage('signup')">Create account</button>
+      </div>
+      <div id="invite-accept-btn" style="display:none">
+        <button class="btn-full" id="btn-accept-invite" onclick="doAcceptInvite()">Accept Invitation</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     SETTINGS
+═══════════════════════════════ -->
+<div class="page" id="page-settings">
+  <div class="dash-wrap">
+    <div class="page-title-bar">
+      <button class="page-back-btn" onclick="showPage('dashboard')">&#8592; Back</button>
+      <div class="dash-welcome" style="margin:0">Account Settings</div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Profile</div>
+      <div class="msg-error" id="err-settings-profile"></div>
+      <div class="msg-success" id="ok-settings-profile"></div>
+      <div class="settings-row">
+        <div class="form-group" style="margin-bottom:0"><label>Full name</label><input type="text" id="set-name" placeholder="Your name" /></div>
+        <div class="form-group" style="margin-bottom:0"><label>Email address</label><input type="email" id="set-email" disabled style="opacity:.6;cursor:not-allowed" /></div>
+      </div>
+      <button class="btn-full" style="margin-top:18px;max-width:200px" onclick="doSaveProfile()">Save changes</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Change Password</div>
+      <div class="msg-error" id="err-settings-pass"></div>
+      <div class="msg-success" id="ok-settings-pass"></div>
+      <div class="form-group"><label>Current password</label><input type="password" id="set-pass-current" placeholder="Your current password" /></div>
+      <div class="settings-row">
+        <div class="form-group" style="margin-bottom:0"><label>New password</label><input type="password" id="set-pass-new" placeholder="At least 8 characters" /></div>
+        <div class="form-group" style="margin-bottom:0"><label>Confirm new password</label><input type="password" id="set-pass-new2" placeholder="Repeat new password" /></div>
+      </div>
+      <button class="btn-full" id="btn-change-pass" style="margin-top:18px;max-width:200px" onclick="doChangePassword()">Update password</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Current Plan</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+        <div>
+          <div style="font-size:24px;font-weight:800;color:var(--navy)" id="set-plan-name">—</div>
+          <div style="font-size:13px;color:var(--gray-400);margin-top:4px" id="set-plan-detail"></div>
+        </div>
+        <button class="btn-primary" onclick="showPage('subscribe')">View Plans</button>
+      </div>
+    </div>
+
+    <div class="settings-section" style="border-color:#fca5a5">
+      <div class="settings-section-title" style="color:#dc2626;border-bottom-color:#fca5a5">Sign Out</div>
+      <p style="font-size:13px;color:var(--gray-600);margin-bottom:16px">This will end your session on this device.</p>
+      <button class="btn-sm btn-sm-danger" style="font-size:13px;padding:8px 18px" onclick="doSignOut()">Sign out of this device</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     TEAM
+═══════════════════════════════ -->
+<div class="page" id="page-team">
+  <div class="dash-wrap">
+    <div class="page-title-bar">
+      <button class="page-back-btn" onclick="showPage('dashboard')">&#8592; Back</button>
+      <div class="dash-welcome" style="margin:0">Team</div>
+    </div>
+    <div class="dash-sub" style="margin-bottom:24px">Manage who has access to your subscription</div>
+
+    <div class="settings-section" id="team-invite-section">
+      <div class="settings-section-title">Invite a member</div>
+      <div class="msg-error" id="err-team-invite"></div>
+      <div class="msg-success" id="ok-team-invite"></div>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <div class="form-group" style="flex:1;margin-bottom:0">
+          <label>Email address</label>
+          <input type="email" id="team-invite-email" placeholder="colleague@example.com" onkeydown="if(event.key==='Enter')doInviteMember()" />
+        </div>
+        <button class="btn-primary" style="padding:12px 22px;white-space:nowrap" onclick="doInviteMember()">Send Invite</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--gray-100)">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">Members <span id="team-count" style="font-size:13px;font-weight:400;color:var(--gray-400)"></span></div>
+        <button class="btn-sm" onclick="loadTeam()">Refresh</button>
+      </div>
+      <div class="msg-error" id="err-team"></div>
+      <div id="team-members-list">
+        <div style="text-align:center;padding:32px;color:var(--gray-400);font-size:14px">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
      SCRIPTS
 ═══════════════════════════════ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.5.9';
+  const APP_VERSION = '0.6.0';
 
   // ── Backend URL ──────────────────────────────────────────────
   const N8N_BASE = 'https://n8n.srv1194492.hstgr.cloud/webhook';
@@ -968,9 +1148,13 @@
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
   // ── Auth init (replaces Firebase onAuthStateChanged) ─────────
+  let pendingResetToken  = null;
+  let pendingInviteToken = null;
+
   async function initAuth() {
-    // Check for email verification token in URL (?verify=TOKEN)
     const params = new URLSearchParams(window.location.search);
+
+    // ?verify=TOKEN — call verify endpoint then go to login
     const verifyToken = params.get('verify');
     if (verifyToken) {
       try {
@@ -980,9 +1164,40 @@
           body: JSON.stringify({ token: verifyToken })
         });
       } catch {}
-      // Clean URL and send to login with a success hint
       history.replaceState(null, '', location.pathname);
       sessionStorage.setItem('rs_verified', '1');
+    }
+
+    // ?reset=TOKEN — store token, show reset-password page
+    const resetToken = params.get('reset');
+    if (resetToken) {
+      pendingResetToken = resetToken;
+      history.replaceState(null, '', location.pathname);
+      const loader = document.getElementById('page-loader');
+      if (loader) { loader.classList.add('hidden'); setTimeout(() => loader.remove(), 300); }
+      showPage('reset-password');
+      return;
+    }
+
+    // ?invite=TOKEN — store token, show accept-invite page
+    const inviteToken = params.get('invite');
+    if (inviteToken) {
+      pendingInviteToken = inviteToken;
+      history.replaceState(null, '', location.pathname);
+      const session = loadSession();
+      if (session && session.token) {
+        currentUser = session;
+        setNav(true, session.name || session.email);
+        g('invite-login-prompt').style.display = 'none';
+        g('invite-accept-btn').style.display   = 'block';
+      } else {
+        g('invite-login-prompt').style.display = 'block';
+        g('invite-accept-btn').style.display   = 'none';
+      }
+      const loader = document.getElementById('page-loader');
+      if (loader) { loader.classList.add('hidden'); setTimeout(() => loader.remove(), 300); }
+      showPage('accept-invite');
+      return;
     }
 
     const session = loadSession();
@@ -1206,6 +1421,252 @@
     clearSession();
     setNav(false);
     showPage('landing');
+  };
+
+  // ── Reset Password ───────────────────────────────────────────
+  window.doResetPassword = async function() {
+    const pass  = (g('rp-pass')?.value || '').trim();
+    const pass2 = (g('rp-pass2')?.value || '').trim();
+    clearErr('err-reset');
+    if (!pendingResetToken) { showErr('err-reset', 'Invalid or expired reset link. Please request a new one.'); return; }
+    if (pass.length < 8)   { showErr('err-reset', 'Password must be at least 8 characters.'); return; }
+    if (pass !== pass2)    { showErr('err-reset', 'Passwords do not match.'); return; }
+    const btn = g('btn-reset');
+    btn.disabled = true; btn.textContent = 'Resetting…';
+    try {
+      const res  = await fetch(N8N_BASE + '/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: pendingResetToken, password: pass })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) { showErr('err-reset', data.error || 'Reset failed. The link may have expired.'); return; }
+      pendingResetToken = null;
+      showOk('ok-reset', 'Password updated! You can now sign in.');
+      setTimeout(() => showPage('login'), 2000);
+    } catch(e) {
+      showErr('err-reset', 'Connection error. Please try again.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Set New Password';
+    }
+  };
+
+  // ── Accept Invite ─────────────────────────────────────────────
+  window.doAcceptInvite = async function() {
+    clearErr('err-invite');
+    if (!pendingInviteToken) { showErr('err-invite', 'Invalid or expired invite link.'); return; }
+    // If not logged in, prompt login first (handled by initAuth showing the prompt)
+    if (!currentUser?.token) { showPage('login'); return; }
+    const btn = g('btn-accept-invite');
+    btn.disabled = true; btn.textContent = 'Accepting…';
+    try {
+      const res  = await fetch(N8N_BASE + '/auth/accept-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
+        body: JSON.stringify({ token: pendingInviteToken })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) { showErr('err-invite', data.error || 'Could not accept invite. The link may have expired.'); return; }
+      pendingInviteToken = null;
+      // Refresh session so org membership is reflected
+      if (data.session) { saveSession(data.session); }
+      showOk('ok-invite', 'You have joined the team! Redirecting…');
+      setTimeout(() => showPage('dashboard'), 1800);
+    } catch(e) {
+      showErr('err-invite', 'Connection error. Please try again.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Accept Invitation';
+    }
+  };
+
+  // ── Settings Page ────────────────────────────────────────────
+  function loadSettingsPage() {
+    if (!currentUser) return;
+    const nameEl  = g('settings-name');
+    const emailEl = g('settings-email');
+    if (nameEl)  nameEl.value  = currentUser.name  || '';
+    if (emailEl) emailEl.value = currentUser.email || '';
+  }
+
+  window.doSaveProfile = async function() {
+    clearErr('err-settings-profile');
+    const name = (g('settings-name')?.value || '').trim();
+    if (!name) { showErr('err-settings-profile', 'Name cannot be empty.'); return; }
+    const btn = g('btn-save-profile');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const res  = await fetch(N8N_BASE + '/auth/update-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
+        body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) { showErr('err-settings-profile', data.error || 'Save failed.'); return; }
+      currentUser.name = name;
+      saveSession(currentUser);
+      setNav(true, name);
+      showOk('ok-settings-profile', 'Profile updated.');
+    } catch(e) {
+      showErr('err-settings-profile', 'Connection error. Please try again.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save Changes';
+    }
+  };
+
+  window.doChangePassword = async function() {
+    clearErr('err-settings-pw');
+    const current  = (g('settings-pw-current')?.value || '');
+    const newPw    = (g('settings-pw-new')?.value || '');
+    const confirm  = (g('settings-pw-confirm')?.value || '');
+    if (!current)         { showErr('err-settings-pw', 'Enter your current password.'); return; }
+    if (newPw.length < 8) { showErr('err-settings-pw', 'New password must be at least 8 characters.'); return; }
+    if (newPw !== confirm) { showErr('err-settings-pw', 'Passwords do not match.'); return; }
+    const btn = g('btn-change-pw');
+    btn.disabled = true; btn.textContent = 'Updating…';
+    try {
+      const res  = await fetch(N8N_BASE + '/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
+        body: JSON.stringify({ currentPassword: current, newPassword: newPw })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) { showErr('err-settings-pw', data.error || 'Password change failed.'); return; }
+      g('settings-pw-current').value = '';
+      g('settings-pw-new').value = '';
+      g('settings-pw-confirm').value = '';
+      showOk('ok-settings-pw', 'Password changed successfully.');
+    } catch(e) {
+      showErr('err-settings-pw', 'Connection error. Please try again.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Update Password';
+    }
+  };
+
+  // ── Team Management ──────────────────────────────────────────
+  let teamMembers = [];
+
+  async function loadTeam() {
+    if (!currentUser?.token) return;
+    const list = g('team-member-list');
+    if (!list) return;
+    list.innerHTML = '<p style="color:var(--gray-400);font-size:13px">Loading…</p>';
+    clearErr('err-team');
+    try {
+      const res  = await fetch(N8N_BASE + '/auth/team', {
+        headers: { 'Authorization': 'Bearer ' + currentUser.token }
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) { list.innerHTML = ''; showErr('err-team', data.error || 'Could not load team.'); return; }
+      teamMembers = data.members || [];
+      renderTeam();
+    } catch(e) {
+      list.innerHTML = '';
+      showErr('err-team', 'Connection error loading team.');
+    }
+  }
+
+  function renderTeam() {
+    const list = g('team-member-list');
+    if (!list) return;
+    if (!teamMembers.length) { list.innerHTML = '<p style="color:var(--gray-400);font-size:13px">No team members yet.</p>'; return; }
+    const isOwner = teamMembers.find(m => m.userId === currentUser.userId)?.role === 'owner';
+    list.innerHTML = teamMembers.map(m => {
+      const isMe  = m.userId === currentUser.userId;
+      const initials = (m.name || m.email || '?').charAt(0).toUpperCase();
+      const roleClass = m.role === 'owner' ? 'role-owner' : m.role === 'admin' ? 'role-admin' : 'role-member';
+      const actions = (!isMe && isOwner) ? `
+        <div class="member-actions">
+          ${m.role !== 'admin' ? `<button class="btn-sm" onclick="doPromoteMember('${m.userId}')">Make Admin</button>` : `<button class="btn-sm" onclick="doDemoteMember('${m.userId}')">Remove Admin</button>`}
+          <button class="btn-sm btn-sm-danger" onclick="doRemoveMember('${m.userId}','${(m.name||m.email).replace(/'/g,'')}')">Remove</button>
+        </div>` : '';
+      return `<div class="team-member-row">
+        <div class="member-info">
+          <div class="member-avatar">${initials}</div>
+          <div>
+            <div class="member-name">${m.name || '—'}${isMe ? ' <span style="font-size:11px;color:var(--gray-400)">(you)</span>' : ''}</div>
+            <div class="member-email">${m.email}</div>
+          </div>
+        </div>
+        <span class="member-role-badge ${roleClass}">${m.role}</span>
+        ${actions}
+      </div>`;
+    }).join('');
+  }
+
+  window.doInviteMember = async function() {
+    clearErr('err-team');
+    const email = (g('invite-email')?.value || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) { showErr('err-team', 'Enter a valid email address.'); return; }
+    const btn = g('btn-invite');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const res  = await fetch(N8N_BASE + '/auth/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) { showErr('err-team', data.error || 'Invite failed.'); return; }
+      g('invite-email').value = '';
+      showOk('ok-team', 'Invite sent to ' + email);
+    } catch(e) {
+      showErr('err-team', 'Connection error. Please try again.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Send Invite';
+    }
+  };
+
+  window.doRemoveMember = async function(userId, name) {
+    if (!confirm('Remove ' + name + ' from your team?')) return;
+    clearErr('err-team');
+    try {
+      const res  = await fetch(N8N_BASE + '/auth/team/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
+        body: JSON.stringify({ targetUserId: userId })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) { showErr('err-team', data.error || 'Could not remove member.'); return; }
+      teamMembers = teamMembers.filter(m => m.userId !== userId);
+      renderTeam();
+      showOk('ok-team', name + ' has been removed.');
+    } catch(e) {
+      showErr('err-team', 'Connection error. Please try again.');
+    }
+  };
+
+  window.doPromoteMember = async function(userId) {
+    clearErr('err-team');
+    try {
+      const res  = await fetch(N8N_BASE + '/auth/team/role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
+        body: JSON.stringify({ targetUserId: userId, role: 'admin' })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) { showErr('err-team', data.error || 'Could not update role.'); return; }
+      const m = teamMembers.find(m => m.userId === userId);
+      if (m) { m.role = 'admin'; renderTeam(); }
+    } catch(e) {
+      showErr('err-team', 'Connection error. Please try again.');
+    }
+  };
+
+  window.doDemoteMember = async function(userId) {
+    clearErr('err-team');
+    try {
+      const res  = await fetch(N8N_BASE + '/auth/team/role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
+        body: JSON.stringify({ targetUserId: userId, role: 'member' })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) { showErr('err-team', data.error || 'Could not update role.'); return; }
+      const m = teamMembers.find(m => m.userId === userId);
+      if (m) { m.role = 'member'; renderTeam(); }
+    } catch(e) {
+      showErr('err-team', 'Connection error. Please try again.');
+    }
   };
 
   // ── PDF Extraction ───────────────────────────────────────────
@@ -1739,13 +2200,9 @@ ${sectionHeader('Premium Breakdown')}
 
   // ── Page navigation ──────────────────────────────────────────
   window.showPage = function(page) {
-    // Hard gate — unverified email users cannot access protected pages
-    if (['dashboard','compare','viewer'].includes(page) && currentUser) {
-      const isEmailProvider = currentUser.providerData.some(p => p.providerId === 'password');
-      if (isEmailProvider && !currentUser.emailVerified) { page = 'verify'; }
-    }
     // Hard gate — logged-out users cannot access protected pages
-    if (['dashboard','compare','viewer'].includes(page) && !currentUser) { page = 'login'; }
+    const gated = ['dashboard','compare','viewer','settings','team'];
+    if (gated.includes(page) && !currentUser) { page = 'login'; }
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const el = document.getElementById('page-' + page);
     if (el) { el.classList.add('active'); currentPage = page; window.scrollTo(0,0); }
@@ -1753,6 +2210,8 @@ ${sectionHeader('Premium Breakdown')}
     if (!['verify','login','signup'].includes(page)) sessionStorage.setItem('rs_page', page);
     if (page === 'dashboard') loadRenewals();
     if (page === 'compare') autoFillSavedPasswords();
+    if (page === 'team') loadTeam();
+    if (page === 'settings') loadSettingsPage();
   };
 
   window.scrollToPricing = function() {
@@ -1769,7 +2228,7 @@ ${sectionHeader('Premium Breakdown')}
 
   // ── PDF Password Manager ─────────────────────────────────────
   function passStorageKey(side) {
-    const uid = currentUser ? currentUser.uid : 'guest';
+    const uid = currentUser ? currentUser.userId : 'guest';
     return 'pdfpasses_' + side + '_' + uid;
   }
   function getSavedPasswords(side) {
