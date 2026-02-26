@@ -30,7 +30,9 @@
     .nav-btn { background: var(--blue); color: #fff; font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 6px; cursor: pointer; border: none; transition: background .15s; font-family: 'Inter', sans-serif; }
     .nav-btn:hover { background: var(--blue-light); }
     .nav-user { display: flex; align-items: center; gap: 10px; }
-    .nav-user-name { color: #94a3b8; font-size: 14px; }
+    .nav-user-chip { display:inline-flex; align-items:center; gap:8px; border:1px solid rgba(255,255,255,.22); border-radius:99px; padding:4px 14px 4px 4px; background:rgba(255,255,255,.06); }
+    .nav-user-avatar { width:28px; height:28px; border-radius:50%; background:var(--blue); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .nav-user-name { color:#fff; font-size:13px; font-weight:500; }
     .nav-signout { color: #94a3b8; font-size: 13px; cursor: pointer; border: none; background: none; padding: 6px 10px; border-radius: 6px; font-family: 'Inter', sans-serif; }
     .nav-signout:hover { color: #fff; background: rgba(255,255,255,.08); }
     @media (max-width: 600px) { .nav-link { display: none; } }
@@ -312,7 +314,10 @@
       <button class="nav-btn" onclick="showPage('login')">Sign In</button>
     </div>
     <div class="nav-user" id="nav-private" style="display:none">
-      <span class="nav-user-name" id="nav-name"></span>
+      <div class="nav-user-chip">
+        <div class="nav-user-avatar" id="nav-avatar"></div>
+        <span class="nav-user-name" id="nav-name"></span>
+      </div>
       <button class="nav-link" onclick="showPage('dashboard')">Dashboard</button>
       <button class="nav-link" onclick="showPage('compare')">Renewals</button>
       <button class="nav-signout" onclick="doSignOut()">Sign out</button>
@@ -931,7 +936,7 @@
   } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.5.4';
+  const APP_VERSION = '0.5.5';
 
   // ─────────────────────────────────────────────────────────────
   // FIREBASE CONFIG
@@ -1033,7 +1038,11 @@
   function setNav(loggedIn, name) {
     document.getElementById('nav-public').style.display  = loggedIn ? 'none' : 'flex';
     document.getElementById('nav-private').style.display = loggedIn ? 'flex' : 'none';
-    if (name) document.getElementById('nav-name').textContent = name;
+    if (name) {
+      document.getElementById('nav-name').textContent = name;
+      const av = document.getElementById('nav-avatar');
+      if (av) av.textContent = name.trim().charAt(0).toUpperCase();
+    }
   }
 
   async function loadDashboard(user) {
