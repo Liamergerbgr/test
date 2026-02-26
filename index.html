@@ -768,7 +768,7 @@
   } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.4.1';
+  const APP_VERSION = '0.4.2';
 
   // ─────────────────────────────────────────────────────────────
   // FIREBASE CONFIG
@@ -1098,7 +1098,7 @@
 
       // Step 3
       setProc('Building your report...', 'Almost done');
-      htmlToCopy = result.htmlBody || '';
+      htmlToCopy = buildEmailHtml(result.data);
       await sleep(600);
       setStep(3,'done');
       await addUsage(currentUser.uid);
@@ -1227,6 +1227,170 @@
           ${bdHtml}
         </div>
       </div>`;
+  }
+
+  // ── Build Outlook-Compatible Email HTML ──────────────────────
+  function buildEmailHtml(d) {
+    if (!d) return '';
+    const inc       = d.totalDirection === 'increase';
+    const arrow     = inc ? '&#9650;' : '&#9660;';
+    const bannerBg  = inc ? '#dc2626' : '#059669';
+    const newClr    = inc ? '#dc2626' : '#059669';
+    const pctChange = (d.oldTotal && d.newTotal && d.oldTotal !== 0)
+      ? Math.abs(Math.round(((d.newTotal - d.oldTotal) / d.oldTotal) * 100)) : null;
+    const pctLabel  = pctChange !== null ? ` (${pctChange}% ${inc ? 'increase' : 'decrease'})` : '';
+
+    const sectionHeader = (title) => `
+<tr><td style="padding:0 32px 0">
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
+  <tr>
+    <td width="3" bgcolor="#2563eb" style="background:#2563eb;width:3px;font-size:0;line-height:0">&nbsp;</td>
+    <td bgcolor="#f8fafc" style="background:#f8fafc;padding:8px 12px">
+      <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#0f2744;font-family:Arial,Helvetica,sans-serif">${title}</p>
+    </td>
+  </tr>
+  </table>
+</td></tr>`;
+
+    // Changes table rows
+    const anyHasSI = d.changes && d.changes.some(c => c.hasInsuredAmount);
+    let changeRows = '';
+    if (!d.changes || d.changes.length === 0) {
+      changeRows = `<tr bgcolor="#ffffff"><td colspan="${anyHasSI?6:4}" style="padding:16px;text-align:center;color:#64748b;font-style:italic;font-family:Arial,Helvetica,sans-serif">No premium changes found.</td></tr>`;
+    } else {
+      d.changes.forEach((c, i) => {
+        const up   = c.difference > 0.01;
+        const none = Math.abs(c.difference) < 0.01;
+        const cc   = none ? '#94a3b8' : (up ? '#dc2626' : '#059669');
+        const ar   = up ? '&#9650;' : '&#9660;';
+        const bg   = i % 2 === 0 ? '#f8fafc' : '#ffffff';
+        const siChanged = c.insuredAmountChanged;
+        const siUp      = c.insuredAmountIncreased;
+        const siColor   = siChanged ? (siUp ? '#dc2626' : '#059669') : '#334155';
+        const siArrow   = siChanged ? (siUp ? ' &#9650;' : ' &#9660;') : '';
+        const siOld = anyHasSI ? `<td bgcolor="${bg}" style="background:${bg};padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;color:#334155;font-family:Arial,Helvetica,sans-serif;font-size:13px">${esc(c.oldInsuredAmountFormatted||'&mdash;')}</td>` : '';
+        const siNew = anyHasSI ? `<td bgcolor="${bg}" style="background:${bg};padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;color:${siColor};font-weight:${siChanged?'700':'400'};font-family:Arial,Helvetica,sans-serif;font-size:13px">${esc(c.newInsuredAmountFormatted||'&mdash;')}${siArrow}</td>` : '';
+        changeRows += `<tr bgcolor="${bg}">
+          <td bgcolor="${bg}" style="background:${bg};padding:10px 12px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#334155;font-family:Arial,Helvetica,sans-serif;font-size:13px">${esc(c.item)}</td>
+          <td bgcolor="${bg}" style="background:${bg};padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;color:#334155;font-family:Arial,Helvetica,sans-serif;font-size:13px">${esc(c.oldPriceFormatted||'R0.00')}</td>
+          <td bgcolor="${bg}" style="background:${bg};padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;color:#334155;font-family:Arial,Helvetica,sans-serif;font-size:13px">${esc(c.newPriceFormatted||'R0.00')}</td>
+          <td bgcolor="${bg}" style="background:${bg};padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;color:${cc};font-family:Arial,Helvetica,sans-serif;font-size:13px">${none ? '&mdash;' : ar + ' ' + esc(c.differenceFormatted)}</td>
+          ${siOld}${siNew}
+        </tr>`;
+      });
+    }
+
+    // Breakdown table (optional)
+    let bdSection = '';
+    const nb = d.newBreakdown, ob = d.oldBreakdown;
+    if (nb || ob) {
+      const bdRow = (label, nv, ov) => (nv || ov) ? `
+        <tr bgcolor="#ffffff">
+          <td bgcolor="#ffffff" style="background:#ffffff;padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#334155;font-family:Arial,Helvetica,sans-serif;font-size:13px">${label}</td>
+          <td bgcolor="#ffffff" style="background:#ffffff;padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;color:#059669;font-weight:600;font-family:Arial,Helvetica,sans-serif;font-size:13px">${nv || '&mdash;'}</td>
+          <td bgcolor="#ffffff" style="background:#ffffff;padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;color:#d97706;font-weight:600;font-family:Arial,Helvetica,sans-serif;font-size:13px">${ov || '&mdash;'}</td>
+        </tr>` : '';
+      bdSection = `
+${sectionHeader('Premium Breakdown')}
+<tr><td style="padding:0 32px 24px">
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+    <thead>
+      <tr bgcolor="#0f2744">
+        <th bgcolor="#0f2744" style="background:#0f2744;padding:10px 12px;text-align:left;font-weight:600;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px">Component</th>
+        <th bgcolor="#0f2744" style="background:#0f2744;padding:10px 12px;text-align:right;font-weight:600;color:#6ee7b7;font-family:Arial,Helvetica,sans-serif;font-size:12px">New</th>
+        <th bgcolor="#0f2744" style="background:#0f2744;padding:10px 12px;text-align:right;font-weight:600;color:#fcd34d;font-family:Arial,Helvetica,sans-serif;font-size:12px">Previous</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${bdRow('Policy Premium', nb?.policyPremium, ob?.policyPremium)}
+      ${bdRow('Fees (Intermediary)', nb?.fees, ob?.fees)}
+      ${bdRow('Sasria', nb?.sasria, ob?.sasria)}
+      ${bdRow('VAS', nb?.vas, ob?.vas)}
+      <tr bgcolor="#f1f5f9">
+        <td bgcolor="#f1f5f9" style="background:#f1f5f9;padding:12px;font-weight:700;color:#0f2744;font-family:Arial,Helvetica,sans-serif;font-size:13px">Total</td>
+        <td bgcolor="#f1f5f9" style="background:#f1f5f9;padding:12px;font-weight:700;color:#059669;text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:13px">${nb?.total || esc(d.newTotalFormatted)}</td>
+        <td bgcolor="#f1f5f9" style="background:#f1f5f9;padding:12px;font-weight:700;color:#d97706;text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:13px">${ob?.total || esc(d.oldTotalFormatted)}</td>
+      </tr>
+    </tbody>
+  </table>
+</td></tr>`;
+    }
+
+    return `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="x-apple-disable-message-reformatting">
+<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+</head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#f1f5f9">
+<tr><td align="center" style="padding:32px 16px">
+
+<table width="600" cellpadding="0" cellspacing="0" role="presentation" style="width:600px;max-width:600px;background:#ffffff">
+
+  <!-- HEADER -->
+  <tr bgcolor="#0f2744">
+  <td bgcolor="#0f2744" style="background:#0f2744;padding:28px 32px">
+    <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#93c5fd;font-family:Arial,Helvetica,sans-serif">Policy Renewal Comparison</p>
+    <p style="margin:10px 0 0;font-size:22px;font-weight:700;color:#ffffff;font-family:Arial,Helvetica,sans-serif">${esc(d.clientName || 'Policy Comparison')}</p>
+    <p style="margin:6px 0 0;font-size:13px;color:#94a3b8;font-family:Arial,Helvetica,sans-serif">${esc(d.oldPolicyPeriod || '')} &rarr; ${esc(d.newPolicyPeriod || '')}</p>
+  </td></tr>
+
+  <!-- TOTALS + BANNER -->
+  <tr><td style="padding:28px 32px 20px">
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+    <tr>
+      <td width="48%" bgcolor="#f8fafc" style="background:#f8fafc;padding:16px;border:1px solid #e2e8f0">
+        <p style="margin:0;font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.8px;font-family:Arial,Helvetica,sans-serif">Previous Premium</p>
+        <p style="margin:6px 0 0;font-size:20px;font-weight:700;color:#d97706;font-family:Arial,Helvetica,sans-serif">${esc(d.oldTotalFormatted || '')}</p>
+      </td>
+      <td width="4%" style="font-size:0;line-height:0">&nbsp;</td>
+      <td width="48%" bgcolor="#f8fafc" style="background:#f8fafc;padding:16px;border:1px solid #e2e8f0">
+        <p style="margin:0;font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.8px;font-family:Arial,Helvetica,sans-serif">New Premium</p>
+        <p style="margin:6px 0 0;font-size:20px;font-weight:700;color:${newClr};font-family:Arial,Helvetica,sans-serif">${esc(d.newTotalFormatted || '')}</p>
+      </td>
+    </tr>
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-top:12px">
+    <tr bgcolor="${bannerBg}">
+    <td bgcolor="${bannerBg}" style="background:${bannerBg};padding:14px 16px">
+      <p style="margin:0;font-size:15px;font-weight:700;color:#ffffff;font-family:Arial,Helvetica,sans-serif">${arrow} Overall Change: ${esc(d.totalDifferenceFormatted || '')}${pctLabel}</p>
+    </td></tr>
+    </table>
+  </td></tr>
+
+  <!-- CHANGES SECTION -->
+  ${sectionHeader('Cover Items with Changes')}
+  <tr><td style="padding:0 32px 24px">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+      <thead>
+        <tr bgcolor="#0f2744">
+          <th bgcolor="#0f2744" style="background:#0f2744;padding:10px 12px;text-align:left;font-weight:600;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px">Cover Item</th>
+          <th bgcolor="#0f2744" style="background:#0f2744;padding:10px 12px;text-align:right;font-weight:600;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px">Prev Premium</th>
+          <th bgcolor="#0f2744" style="background:#0f2744;padding:10px 12px;text-align:right;font-weight:600;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px">New Premium</th>
+          <th bgcolor="#0f2744" style="background:#0f2744;padding:10px 12px;text-align:right;font-weight:600;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px">Change</th>
+          ${anyHasSI ? `<th bgcolor="#0f2744" style="background:#0f2744;padding:10px 12px;text-align:right;font-weight:600;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px">Prev Cover</th><th bgcolor="#0f2744" style="background:#0f2744;padding:10px 12px;text-align:right;font-weight:600;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px">New Cover</th>` : ''}
+        </tr>
+      </thead>
+      <tbody>${changeRows}</tbody>
+    </table>
+  </td></tr>
+
+  <!-- BREAKDOWN SECTION (conditional) -->
+  ${bdSection}
+
+  <!-- FOOTER -->
+  <tr bgcolor="#f8fafc">
+  <td bgcolor="#f8fafc" style="background:#f8fafc;padding:20px 32px;border-top:2px solid #e2e8f0">
+    <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;font-family:Arial,Helvetica,sans-serif">Generated by RenewalScan AI &middot; v${APP_VERSION} &middot; TaskAutomateAI.co.za</p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`;
   }
 
   // ── Copy HTML ────────────────────────────────────────────────
@@ -1518,7 +1682,7 @@
       const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
       const record = list[index];
       if (!record || !record.result) { alert('Full result data is not available for this comparison. Only new comparisons are viewable.'); return; }
-      htmlToCopy = record.resultHtml || '';
+      htmlToCopy = record.result ? buildEmailHtml(record.result) : '';
       showPage('viewer');
       renderViewerResult(record);
     } catch(e) {
