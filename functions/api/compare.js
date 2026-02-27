@@ -8,7 +8,7 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 });
   }
 
-  const { oldPolicyText, newPolicyText, notes } = body;
+  const { oldPolicyText, newPolicyText, notes, deviceId } = body;
 
   if (!oldPolicyText || !newPolicyText) {
     return new Response(JSON.stringify({ error: 'oldPolicyText and newPolicyText are required' }), { status: 400 });
@@ -25,6 +25,11 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({ error: 'Server not configured. Contact support.' }), { status: 500 });
   }
 
+  // Extract IP and auth token to forward to n8n for trial/quota gating
+  const clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const authHeader = request.headers.get('Authorization') || '';
+  const authToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (webhookSecret) headers['x-renewalscan-secret'] = webhookSecret;
@@ -32,17 +37,30 @@ export async function onRequestPost(context) {
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ oldPolicyText, newPolicyText, notes: notes || '' }),
+      body: JSON.stringify({
+        oldPolicyText,
+        newPolicyText,
+        notes: notes || '',
+        _ip: clientIp,
+        _deviceId: deviceId || '',
+        _token: authToken
+      }),
       signal: AbortSignal.timeout(180000)
     });
 
     if (!response.ok) {
-      let errorMessage = 'Processing error. Please try again.';
-      try {
-        const errData = await response.json();
-        if (errData.message) errorMessage = errData.message;
-        else if (typeof errData.error === 'string') errorMessage = errData.error;
-      } catch (e) { /* not JSON, keep default message */ }
+      let errorBody = {};
+      try { errorBody = await response.json(); } catch (e) { /* not JSON */ }
+
+      // Pass 402 (trial/quota exhausted) directly to the frontend
+      if (response.status === 402) {
+        return new Response(JSON.stringify(errorBody), {
+          status: 402,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+
+      const errorMessage = errorBody.message || (typeof errorBody.error === 'string' ? errorBody.error : 'Processing error. Please try again.');
       return new Response(JSON.stringify({ error: errorMessage }), { status: 502 });
     }
 

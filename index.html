@@ -1100,7 +1100,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.6.2';
+  const APP_VERSION = '0.6.3';
+
+  // ── Device ID (for free trial tracking) ─────────────────────
+  function getDeviceId() {
+    let id = localStorage.getItem('rs_device_id');
+    if (!id) {
+      id = crypto.randomUUID ? crypto.randomUUID() :
+        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+      localStorage.setItem('rs_device_id', id);
+    }
+    return id;
+  }
 
   // ── Backend URL ──────────────────────────────────────────────
   const N8N_BASE = 'https://n8n.srv1194492.hstgr.cloud/webhook';
@@ -1857,11 +1871,29 @@
       resp = await fetch('/api/compare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ oldPolicyText: oldText, newPolicyText: newText, notes }),
+        body: JSON.stringify({ oldPolicyText: oldText, newPolicyText: newText, notes, deviceId: getDeviceId() }),
         signal: controller.signal
       });
     } finally {
       clearTimeout(timer);
+    }
+
+    // Handle trial/quota exhausted (402)
+    if (resp.status === 402) {
+      const d = await resp.json().catch(() => ({}));
+      g('proc-panel').classList.remove('show');
+      g('btn-compare').disabled = false;
+      g('btn-compare').textContent = 'Analyse Renewal';
+      if (d.error === 'trial_exhausted') {
+        showErr('err-compare', 'You have used all 5 free renewals. Please subscribe to continue.');
+        showPage('subscribe');
+      } else if (d.error === 'quota_exceeded') {
+        showErr('err-compare', 'You have reached your plan limit. Please upgrade to continue.');
+        showPage('subscribe');
+      } else if (d.error === 'unauthenticated') {
+        showPage('login');
+      }
+      return;
     }
 
     const result = await resp.json();
