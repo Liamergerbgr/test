@@ -617,9 +617,13 @@
       <div class="auth-form-title">Create your account</div>
       <div class="auth-form-sub">Start comparing policies today &mdash; free to try</div>
       <div class="msg-error" id="err-signup"></div>
-      <div class="form-group"><label>Full name</label><input type="text" id="s-name" placeholder="John Smith" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin-bottom:0"><label>First name</label><input type="text" id="s-fname" placeholder="John" /></div>
+        <div class="form-group" style="margin-bottom:0"><label>Surname</label><input type="text" id="s-lname" placeholder="Smith" /></div>
+      </div>
       <div class="form-group"><label>Email address</label><input type="email" id="s-email" placeholder="you@example.com" /></div>
-      <div class="form-group"><label>Password</label><input type="password" id="s-pass" placeholder="At least 8 characters" onkeydown="if(event.key==='Enter')doSignUp()" /></div>
+      <div class="form-group"><label>Password</label><input type="password" id="s-pass" placeholder="At least 8 characters" /></div>
+      <div class="form-group"><label>Confirm password</label><input type="password" id="s-pass2" placeholder="Repeat your password" onkeydown="if(event.key==='Enter')doSignUp()" /></div>
       <button class="btn-full" id="btn-signup" onclick="doSignUp()">Create account</button>
       <div class="auth-link" style="font-size:12px;color:var(--gray-400);line-height:1.6;margin-top:14px">
         By creating an account you agree to our <a onclick="showPage('terms')">Terms of Service</a> and <a onclick="showPage('privacy')">Privacy Policy</a>.
@@ -1342,7 +1346,17 @@
         body: JSON.stringify({ email, password: pass })
       });
       const data = await resp.json();
-      if (!resp.ok) { showErr('err-login', data.error || 'Invalid email or password.'); btn.disabled=false; btn.textContent='Sign in'; return; }
+      if (!resp.ok) {
+        const msg = data.error || 'Invalid email or password.';
+        if (msg.toLowerCase().includes('verif')) {
+          sessionStorage.setItem('rs_pending_email', email);
+          g('verify-email').textContent = email;
+          showPage('verify');
+          showErr('err-verify', 'Your email is not yet verified. Click below to receive a new verification link.');
+          btn.disabled=false; btn.textContent='Sign in'; return;
+        }
+        showErr('err-login', msg); btn.disabled=false; btn.textContent='Sign in'; return;
+      }
       saveSession(data);
       setNav(true, data.name || data.email);
       loadDashboard();
@@ -1370,12 +1384,16 @@
 
   // ── Sign Up ──────────────────────────────────────────────────
   window.doSignUp = async function() {
-    const name  = g('s-name').value.trim();
+    const firstName = g('s-fname').value.trim();
+    const surname   = g('s-lname').value.trim();
+    const name      = firstName + ' ' + surname;
     const email = g('s-email').value.trim();
     const pass  = g('s-pass').value;
+    const pass2 = g('s-pass2').value;
     const btn   = g('btn-signup');
     clearErr('err-signup');
-    if (!name||!email||!pass) { showErr('err-signup', 'Please fill in all fields.'); return; }
+    if (!firstName||!surname||!email||!pass||!pass2) { showErr('err-signup', 'Please fill in all fields.'); return; }
+    if (pass !== pass2) { showErr('err-signup', 'Passwords do not match.'); return; }
     if (pass.length < 8) { showErr('err-signup', 'Password must be at least 8 characters.'); return; }
     btn.disabled = true; btn.textContent = 'Creating account...';
     try {
@@ -1404,14 +1422,14 @@
 
   window.doResendVerify = async function() {
     const email = sessionStorage.getItem('rs_pending_email') || '';
-    if (!email) { showOk('ok-verify', 'Please contact support if you didn\'t receive the email.'); return; }
+    if (!email) { showErr('err-verify', 'Could not find your email. Please go back and try signing in again.'); return; }
     try {
-      await fetch(N8N_BASE + '/auth/forgot-password', {
+      await fetch(N8N_BASE + '/auth/resend-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
-      showOk('ok-verify', 'Verification email resent! Check your inbox.');
+      showOk('ok-verify', 'Verification email sent! Check your inbox and click the link.');
     } catch(e) { showErr('err-verify', 'Could not send email. Please try again.'); }
   };
 
