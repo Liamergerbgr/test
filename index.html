@@ -1100,7 +1100,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.6.1';
+  const APP_VERSION = '0.6.2';
 
   // ── Backend URL ──────────────────────────────────────────────
   const N8N_BASE = 'https://n8n.srv1194492.hstgr.cloud/webhook';
@@ -1205,6 +1205,34 @@
           const ab = g('invite-accept-btn');   if (ab) ab.style.display = 'none';
         }
         showPage('accept-invite');
+        return;
+      }
+
+      // ?changepass=TOKEN — confirm password change then show login with result
+      const changePwToken = params.get('changepass');
+      if (changePwToken) {
+        history.replaceState(null, '', location.pathname);
+        let changed = false, changePwErr = '';
+        try {
+          const r = await fetch(N8N_BASE + '/auth/confirm-password-change', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: changePwToken })
+          });
+          const d = await r.json();
+          if (d.success) { changed = true; }
+          else { changePwErr = d.error || 'Link invalid or expired.'; }
+        } catch { changePwErr = 'Connection error. Please try again.'; }
+        showPage('login');
+        const el = g('err-login');
+        if (el) {
+          if (changed) {
+            el.style.cssText = 'background:#f0fdf4;border-color:#86efac;color:#16a34a;display:block';
+            el.textContent = 'Password changed successfully. Please log in with your new password.';
+          } else {
+            showErr('err-login', changePwErr);
+          }
+        }
         return;
       }
 
@@ -1484,7 +1512,7 @@
     const btn = g('btn-accept-invite');
     btn.disabled = true; btn.textContent = 'Accepting…';
     try {
-      const res  = await fetch(N8N_BASE + '/auth/accept-invite', {
+      const res  = await fetch(N8N_BASE + '/team/accept-invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
         body: JSON.stringify({ token: pendingInviteToken })
@@ -1551,9 +1579,9 @@
     if (newPw.length < 8) { showErr('err-settings-pass', 'New password must be at least 8 characters.'); return; }
     if (newPw !== confirm) { showErr('err-settings-pass', 'Passwords do not match.'); return; }
     const btn = g('btn-change-pass');
-    btn.disabled = true; btn.textContent = 'Updating…';
+    btn.disabled = true; btn.textContent = 'Sending…';
     try {
-      const res  = await fetch(N8N_BASE + '/auth/change-password', {
+      const res  = await fetch(N8N_BASE + '/auth/request-password-change', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
         body: JSON.stringify({ currentPassword: current, newPassword: newPw })
@@ -1563,7 +1591,7 @@
       g('set-pass-current').value = '';
       g('set-pass-new').value = '';
       g('set-pass-new2').value = '';
-      showOk('ok-settings-pass', 'Password changed successfully.');
+      showOk('ok-settings-pass', 'Check your email for a confirmation link to complete the password change.');
     } catch(e) {
       showErr('err-settings-pass', 'Connection error. Please try again.');
     } finally {
@@ -1581,7 +1609,7 @@
     list.innerHTML = '<p style="color:var(--gray-400);font-size:13px">Loading…</p>';
     clearErr('err-team');
     try {
-      const res  = await fetch(N8N_BASE + '/auth/team', {
+      const res  = await fetch(N8N_BASE + '/team/members', {
         headers: { 'Authorization': 'Bearer ' + currentUser.token }
       });
       const data = await res.json();
@@ -1629,7 +1657,7 @@
     const btn = g('btn-invite');
     btn.disabled = true; btn.textContent = 'Sending…';
     try {
-      const res  = await fetch(N8N_BASE + '/auth/invite', {
+      const res  = await fetch(N8N_BASE + '/team/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
         body: JSON.stringify({ email })
@@ -1649,7 +1677,7 @@
     if (!confirm('Remove ' + name + ' from your team?')) return;
     clearErr('err-team');
     try {
-      const res  = await fetch(N8N_BASE + '/auth/team/remove', {
+      const res  = await fetch(N8N_BASE + '/team/remove-member', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
         body: JSON.stringify({ targetUserId: userId })
@@ -1667,7 +1695,7 @@
   window.doPromoteMember = async function(userId) {
     clearErr('err-team');
     try {
-      const res  = await fetch(N8N_BASE + '/auth/team/role', {
+      const res  = await fetch(N8N_BASE + '/team/promote-member', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
         body: JSON.stringify({ targetUserId: userId, role: 'admin' })
@@ -1684,7 +1712,7 @@
   window.doDemoteMember = async function(userId) {
     clearErr('err-team');
     try {
-      const res  = await fetch(N8N_BASE + '/auth/team/role', {
+      const res  = await fetch(N8N_BASE + '/team/promote-member', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
         body: JSON.stringify({ targetUserId: userId, role: 'member' })
