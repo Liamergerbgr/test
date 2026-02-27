@@ -624,6 +624,12 @@
       <div class="form-group"><label>Email address</label><input type="email" id="s-email" placeholder="you@example.com" /></div>
       <div class="form-group"><label>Password</label><input type="password" id="s-pass" placeholder="At least 8 characters" /></div>
       <div class="form-group"><label>Confirm password</label><input type="password" id="s-pass2" placeholder="Repeat your password" onkeydown="if(event.key==='Enter')doSignUp()" /></div>
+      <div class="form-group" style="margin-bottom:4px">
+        <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--gray-600);cursor:pointer;font-weight:400">
+          <input type="checkbox" id="consent-popia" style="margin-top:3px;flex-shrink:0">
+          <span>I consent to the processing of my personal data, including sending policy document text to Anthropic's AI API for analysis, as described in the <a onclick="showPage('privacy')" style="color:var(--blue)">Privacy Policy</a>.</span>
+        </label>
+      </div>
       <button class="btn-full" id="btn-signup" onclick="doSignUp()">Create account</button>
       <div class="auth-link" style="font-size:12px;color:var(--gray-400);line-height:1.6;margin-top:14px">
         By creating an account you agree to our <a onclick="showPage('terms')">Terms of Service</a> and <a onclick="showPage('privacy')">Privacy Policy</a>.
@@ -871,11 +877,12 @@
       <li><strong>Usage data:</strong> A monthly count of comparisons you run, stored in our database under your user ID.</li>
       <li><strong>Comparison history:</strong> The output of each policy comparison — including client name, date, duration, and the comparison result — stored locally in your browser and associated with your account.</li>
       <li><strong>Policy document text:</strong> The text extracted from PDFs you upload is sent to our AI processing API for analysis. This text is not stored persistently after processing is complete.</li>
+      <li><strong>Trial usage identifiers:</strong> To track free trial usage, we store a one-way hashed (SHA-256) version of your IP address and a browser-generated device ID. The raw IP address is never stored.</li>
     </ul>
     <h2>2. How We Use Your Data</h2>
     <p>We use your data exclusively to provide the RenewalScan AI service: authenticating your account, tracking your monthly usage against your plan limit, and storing your comparison history so you can revisit past results. We do not use your data for advertising, profiling, or any purpose other than operating this service.</p>
     <h2>3. Data Sharing</h2>
-    <p>We do not sell, rent, or share your personal data with third parties. Your account data is stored securely on our own servers. Your comparison data is processed by our AI analysis infrastructure, which does not retain document content after the comparison is complete.</p>
+    <p>We do not sell, rent, or share your personal data with third parties for marketing or commercial purposes. Policy document text submitted for comparison is transmitted to Anthropic, Inc. (developer of the Claude AI model) via an API call for AI analysis. Anthropic does not retain this content after processing. This constitutes a cross-border transfer of data (Anthropic is based in the United States). By creating an account, you consent to this processing. You can review Anthropic's privacy policy at <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener" style="color:var(--blue)">anthropic.com/privacy</a>.</p>
     <h2>4. Data Retention</h2>
     <p>Your account data is retained for as long as your account is active. Your comparison history is capped at your 20 most recent comparisons and is stored in your browser's local storage. You may request deletion of your account and all associated data at any time by contacting support.</p>
     <h2>5. Your Rights (GDPR / POPIA)</h2>
@@ -1052,6 +1059,14 @@
       <p style="font-size:13px;color:var(--gray-600);margin-bottom:16px">This will end your session on this device.</p>
       <button class="btn-sm btn-sm-danger" style="font-size:13px;padding:8px 18px" onclick="doSignOut()">Sign out of this device</button>
     </div>
+
+    <div class="settings-section" style="border-color:#fca5a5">
+      <div class="settings-section-title" style="color:#dc2626;border-bottom-color:#fca5a5">Delete Account</div>
+      <p style="font-size:13px;color:var(--gray-600);margin-bottom:16px">Permanently delete your account and all associated data. This cannot be undone. In accordance with POPIA, you have the right to request deletion of all data we hold about you.</p>
+      <div class="msg-error" id="err-delete-account"></div>
+      <div class="msg-success" id="ok-delete-account"></div>
+      <button class="btn-sm btn-sm-danger" style="font-size:13px;padding:8px 18px" onclick="doDeleteAccount()">Delete my account</button>
+    </div>
   </div>
 </div>
 
@@ -1100,7 +1115,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.6.3';
+  const APP_VERSION = '0.6.4';
 
   // ── Device ID (for free trial tracking) ─────────────────────
   function getDeviceId() {
@@ -1435,6 +1450,7 @@
     if (!firstName||!surname||!email||!pass||!pass2) { showErr('err-signup', 'Please fill in all fields.'); return; }
     if (pass !== pass2) { showErr('err-signup', 'Passwords do not match.'); return; }
     if (pass.length < 8) { showErr('err-signup', 'Password must be at least 8 characters.'); return; }
+    if (!g('consent-popia').checked) { showErr('err-signup', 'Please accept the privacy policy to continue.'); return; }
     btn.disabled = true; btn.textContent = 'Creating account...';
     try {
       const resp = await fetch(N8N_BASE + '/auth/signup', {
@@ -1487,6 +1503,36 @@
     clearSession();
     setNav(false);
     showPage('landing');
+  };
+
+  // ── Delete Account ───────────────────────────────────────────
+  window.doDeleteAccount = async function() {
+    clearErr('err-delete-account');
+    if (!confirm('Are you sure you want to permanently delete your account? All your data will be erased and this cannot be undone.')) return;
+    const token = currentUser?.token;
+    if (!token) { showErr('err-delete-account', 'Not logged in.'); return; }
+    const btn = document.querySelector('[onclick="doDeleteAccount()"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
+    try {
+      const resp = await fetch(N8N_BASE + '/auth/delete-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Delete my account'; }
+        showErr('err-delete-account', data.error || 'Failed to delete account. Please contact support@taskautomateai.co.za.');
+        return;
+      }
+      localStorage.clear();
+      sessionStorage.clear();
+      currentUser = null;
+      setNav(false);
+      showPage('landing');
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Delete my account'; }
+      showErr('err-delete-account', 'Could not connect. Please contact support@taskautomateai.co.za to request account deletion.');
+    }
   };
 
   // ── Reset Password ───────────────────────────────────────────
@@ -2330,6 +2376,17 @@ ${sectionHeader('Premium Breakdown')}
     list.unshift(pw);
     if (list.length > 20) list = list.slice(0, 20);
     localStorage.setItem(passStorageKey(side), JSON.stringify(list));
+    showPassSavedWarning();
+  }
+
+  function showPassSavedWarning() {
+    if (sessionStorage.getItem('rs_pass_warn_shown')) return;
+    sessionStorage.setItem('rs_pass_warn_shown', '1');
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3c5e;color:#fff;padding:14px 20px;border-radius:8px;font-size:13px;line-height:1.6;max-width:440px;width:90%;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;align-items:flex-start;gap:12px';
+    el.innerHTML = '<span style="font-size:18px;flex-shrink:0">&#128274;</span><span>Password saved to this browser only. Anyone with access to this device can read saved passwords — clear them when using shared devices.<button onclick="this.closest(\'div\').remove()" style="margin-left:12px;background:rgba(255,255,255,0.2);border:none;color:#fff;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:12px;vertical-align:middle">Dismiss</button></span>';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 10000);
   }
   function deletePassword(pw, side) {
     let list = getSavedPasswords(side).filter(p => p !== pw);
