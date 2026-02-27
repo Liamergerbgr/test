@@ -1232,8 +1232,6 @@
       dismissLoader();
     }
   }
-  initAuth();
-
   function setNav(loggedIn, name) {
     document.getElementById('nav-public').style.display  = loggedIn ? 'none' : 'flex';
     document.getElementById('nav-private').style.display = loggedIn ? 'flex' : 'none';
@@ -2463,6 +2461,8 @@ ${sectionHeader('Premium Breakdown')}
   }
 
   window.viewerPrintPdf = function() { doPrintPdf('viewer-results-output'); };
+
+  initAuth();
 
 </script>
 </body>
