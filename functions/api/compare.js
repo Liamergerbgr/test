@@ -1,10 +1,22 @@
-const JSON_HEADERS = { 'Content-Type': 'application/json' };
+const JSON_HEADERS = {
+  'Content-Type': 'application/json',
+  'X-Content-Type-Options': 'nosniff'
+};
 
 // UUID v4 format validation
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+// Minimum policy text length to prevent empty/trivial submissions
+const MIN_POLICY_LENGTH = 100;
+
 export async function onRequestPost(context) {
   const { request, env } = context;
+
+  // Reject non-JSON content types
+  const ct = request.headers.get('Content-Type') || '';
+  if (!ct.includes('application/json')) {
+    return new Response(JSON.stringify({ error: 'Content-Type must be application/json' }), { status: 415, headers: JSON_HEADERS });
+  }
 
   let body;
   try {
@@ -21,6 +33,10 @@ export async function onRequestPost(context) {
 
   if (typeof oldPolicyText !== 'string' || typeof newPolicyText !== 'string') {
     return new Response(JSON.stringify({ error: 'Policy text must be a string' }), { status: 400, headers: JSON_HEADERS });
+  }
+
+  if (oldPolicyText.length < MIN_POLICY_LENGTH || newPolicyText.length < MIN_POLICY_LENGTH) {
+    return new Response(JSON.stringify({ error: 'Policy text too short. Please upload a valid policy document.' }), { status: 400, headers: JSON_HEADERS });
   }
 
   if (oldPolicyText.length > 500000 || newPolicyText.length > 500000) {
