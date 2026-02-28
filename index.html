@@ -874,9 +874,10 @@
       </div>
       <div style="margin-top:16px" id="notes-wrap">
         <label style="font-size:13px;font-weight:600;color:var(--navy);display:block;margin-bottom:6px">Additional Notes <span style="font-weight:400;color:var(--gray-400)">(optional)</span></label>
+        <div id="note-templates-row" style="display:none;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px"></div>
         <div style="position:relative">
           <div id="notes-saved-list" style="display:none;position:absolute;bottom:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(15,39,68,.12);z-index:200;max-height:200px;overflow-y:auto"></div>
-          <textarea id="comparison-notes" placeholder="Type notes to include below the comparison in the email…" style="width:100%;font-size:13px;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter,sans-serif;color:var(--gray-700);resize:vertical;min-height:80px;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="renderSavedNotesList();toggleSaveNoteCheckbox()"></textarea>
+          <textarea id="comparison-notes" placeholder="Type notes to include below the comparison in the email…" style="width:100%;font-size:13px;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter,sans-serif;color:var(--gray-700);resize:vertical;min-height:80px;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'" oninput="renderSavedNotesList();toggleSaveNoteCheckbox();renderNoteTemplates()"></textarea>
         </div>
         <label id="save-note-label" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--gray-500);margin-top:6px;cursor:pointer;user-select:none"><input type="checkbox" id="save-note-check" style="cursor:pointer;accent-color:var(--blue)"> Save this note for future use</label>
       </div>
@@ -1195,7 +1196,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
 <script>
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.6.7';
+  const APP_VERSION = '0.6.8';
 
   // ── Device ID (for free trial tracking) ─────────────────────
   function getDeviceId() {
@@ -2527,7 +2528,7 @@ ${sectionHeader('Premium Breakdown')}
     // Remember page across refreshes (skip transient/auth pages)
     if (!['verify','login','signup'].includes(page)) sessionStorage.setItem('rs_page', page);
     if (page === 'dashboard') loadRenewals();
-    if (page === 'compare') autoFillSavedPasswords();
+    if (page === 'compare') { autoFillSavedPasswords(); renderNoteTemplates(); }
     if (page === 'team') loadTeam();
     if (page === 'settings') loadSettingsPage();
   };
@@ -2726,10 +2727,59 @@ ${sectionHeader('Premium Breakdown')}
     if (lbl) lbl.style.display = val ? 'flex' : 'none';
   };
 
+  // ── Note Templates ────────────────────────────────────────────
+  function noteTemplatesKey() {
+    return currentUser ? 'pdfnote_templates_' + currentUser.userId : 'pdfnote_templates_guest';
+  }
+  function getNoteTemplates() {
+    try { return JSON.parse(localStorage.getItem(noteTemplatesKey()) || '[]'); } catch { return []; }
+  }
+  window.renderNoteTemplates = function() {
+    const row = g('note-templates-row');
+    if (!row) return;
+    const templates = getNoteTemplates();
+    const hasContent = (g('comparison-notes')?.value || '').trim().length > 0;
+    const canSave = templates.length < 3 && hasContent;
+    const pills = templates.map((t, i) => {
+      const label = t.length > 32 ? t.slice(0, 32) + '\u2026' : t;
+      const safe = t.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:20px;padding:4px 10px 4px 12px;font-size:12px;color:var(--navy)" title="${t.replace(/"/g,'&quot;')}">
+        <span style="cursor:pointer" onclick="applyNoteTemplate('${safe}')">${label}</span>
+        <span onclick="deleteNoteTemplate(${i})" style="color:var(--gray-400);font-size:13px;cursor:pointer;line-height:1" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--gray-400)'">&times;</span>
+      </span>`;
+    }).join('');
+    const saveBtn = canSave
+      ? `<button onclick="saveNoteTemplate()" style="background:none;border:1px dashed var(--gray-300);color:var(--gray-500);border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif">+ Save as Template</button>`
+      : '';
+    row.innerHTML = pills + saveBtn;
+    row.style.display = (templates.length > 0 || canSave) ? 'flex' : 'none';
+  };
+  window.applyNoteTemplate = function(text) {
+    const ta = g('comparison-notes');
+    if (ta) { ta.value = text; ta.dispatchEvent(new Event('input')); }
+    renderNoteTemplates();
+  };
+  window.saveNoteTemplate = function() {
+    const text = (g('comparison-notes')?.value || '').trim();
+    if (!text) return;
+    const templates = getNoteTemplates();
+    if (templates.length >= 3 || templates.includes(text)) return;
+    templates.push(text);
+    localStorage.setItem(noteTemplatesKey(), JSON.stringify(templates));
+    renderNoteTemplates();
+  };
+  window.deleteNoteTemplate = function(i) {
+    const templates = getNoteTemplates();
+    templates.splice(i, 1);
+    localStorage.setItem(noteTemplatesKey(), JSON.stringify(templates));
+    renderNoteTemplates();
+  };
+
   // Show saved notes list when textarea is focused
   document.addEventListener('DOMContentLoaded', () => {
     const ta = g('comparison-notes');
-    if (ta) ta.addEventListener('focus', renderSavedNotesList);
+    if (ta) { ta.addEventListener('focus', renderSavedNotesList); }
+    renderNoteTemplates();
     document.querySelectorAll('.app-ver').forEach(el => el.textContent = 'v' + APP_VERSION);
   });
 
