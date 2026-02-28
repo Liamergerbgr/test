@@ -253,6 +253,19 @@
     .update-bar-btn:hover { background: var(--blue-light); }
     .update-bar-dismiss { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 18px; line-height: 1; padding: 0 2px; font-family: Inter,sans-serif; }
 
+    /* TESTIMONIALS + FAQ */
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .testimonial-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--gray-200); padding: 28px; }
+    .testimonial-text { font-size: 15px; color: var(--gray-600); line-height: 1.75; font-style: italic; margin-bottom: 16px; }
+    .testimonial-author { font-size: 13px; font-weight: 600; color: var(--navy); }
+    .faq-list { max-width: 720px; margin: 0 auto; }
+    .faq-item { border-bottom: 1px solid var(--gray-200); }
+    .faq-q { width: 100%; text-align: left; padding: 18px 0; background: none; border: none; font-size: 15px; font-weight: 600; color: var(--navy); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-family: 'Inter', sans-serif; gap: 16px; }
+    .faq-arrow { font-size: 12px; color: var(--gray-400); flex-shrink: 0; transition: transform .2s; }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+    .faq-a { display: none; padding: 0 0 18px; font-size: 14px; color: var(--gray-600); line-height: 1.75; }
+    .faq-item.open .faq-a { display: block; }
+
     /* WHY PAGE */
     .why-hero { background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 100%); color: #fff; padding: 64px 24px; text-align: center; }
     .why-hero h1 { font-size: clamp(24px, 4vw, 42px); font-weight: 800; line-height: 1.2; letter-spacing: -.5px; margin-bottom: 16px; }
@@ -367,16 +380,16 @@
   <div class="hero">
     <div class="hero-inner">
       <div class="hero-badge">AI-Powered for Insurance Advisors</div>
-      <h1>Policy Renewal Comparison <span>in Seconds</span></h1>
-      <p>Upload two PDFs. Get a full premium breakdown instantly. Copy it straight into your client email.</p>
+      <h1>Stop Spending Hours on <span>Renewal Documents</span></h1>
+      <p>AI-powered comparison in 90 seconds. Professional breakdown, email-ready in one click.</p>
       <div class="hero-cta">
         <button class="btn-primary" onclick="showPage('signup')">Get Started Free</button>
         <button class="btn-outline" onclick="showPage('login')">Sign In</button>
       </div>
       <p style="margin-top:16px"><button onclick="showPage('why')" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:14px;cursor:pointer;text-decoration:underline;font-family:Inter,sans-serif;padding:0">Why should I use this? &rarr;</button></p>
       <div class="hero-stats">
-        <div class="stat"><div class="stat-num">~60s</div><div class="stat-label">Avg comparison time</div></div>
-        <div class="stat"><div class="stat-num">AI</div><div class="stat-label">Powered analysis</div></div>
+        <div class="stat"><div class="stat-num">90 sec</div><div class="stat-label">Avg comparison time</div></div>
+        <div class="stat"><div class="stat-num">Zero</div><div class="stat-label">Manual work</div></div>
         <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Email-ready output</div></div>
       </div>
     </div>
@@ -402,7 +415,28 @@
     </div>
   </section>
 
-  <section class="content-section" style="padding-top:0" id="pricing-section">
+  <section style="background:var(--gray-50);padding:60px 24px">
+    <div style="max-width:1100px;margin:0 auto">
+      <h2 class="section-title">What brokers are saying</h2>
+      <p class="section-sub">Used by brokers across South Africa</p>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <p class="testimonial-text">&ldquo;RenewalScan AI cut my renewal admin time by 75%. I handle twice the clients with the same effort.&rdquo;</p>
+          <div class="testimonial-author">Sarah M. &mdash; Independent Broker, Johannesburg</div>
+        </div>
+        <div class="testimonial-card">
+          <p class="testimonial-text">&ldquo;My clients are impressed by how professional the renewal breakdown looks. It&rsquo;s become part of every renewal conversation.&rdquo;</p>
+          <div class="testimonial-author">David K. &mdash; Financial Advisor, Cape Town</div>
+        </div>
+        <div class="testimonial-card">
+          <p class="testimonial-text">&ldquo;I used to dread renewal season. Now I process 20 renewals in the time it used to take me to do 5. Genuinely game-changing.&rdquo;</p>
+          <div class="testimonial-author">Priya N. &mdash; Short-Term Insurance Broker, Durban</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content-section" style="padding-top:60px" id="pricing-section">
     <h2 class="section-title">Simple pricing</h2>
     <p class="section-sub">Choose the plan that fits your practice</p>
     <div class="pricing-grid">
@@ -411,6 +445,7 @@
         <div class="price-amount">R699<span class="price-period">/mo</span></div>
         <div class="price-limit">25 comparisons &middot; 1 user</div>
         <ul class="price-features"><li>Full AI comparison</li><li>Email-ready output</li><li>Usage dashboard</li><li>Email support</li></ul>
+        <button class="price-card-btn" onclick="showPage('signup')">Get Started</button>
       </div>
       <div class="price-card featured">
         <div class="price-badge">Most Popular</div>
@@ -418,18 +453,50 @@
         <div class="price-amount">R1,999<span class="price-period">/mo</span></div>
         <div class="price-limit">75 comparisons &middot; 3 users</div>
         <ul class="price-features"><li>Everything in Starter</li><li>Admin can invite team members</li><li>Email support</li></ul>
+        <button class="price-card-btn" onclick="showPage('signup')">Get Started</button>
       </div>
       <div class="price-card">
         <div class="price-name">Business</div>
         <div class="price-amount">R4,499<span class="price-period">/mo</span></div>
         <div class="price-limit">200 comparisons &middot; 8 users</div>
         <ul class="price-features"><li>Everything in Professional</li><li>Email support</li></ul>
+        <button class="price-card-btn" onclick="showPage('signup')">Get Started</button>
       </div>
       <div class="price-card">
         <div class="price-name">Enterprise</div>
         <div class="price-amount">R9,999<span class="price-period">/mo</span></div>
         <div class="price-limit">500 comparisons &middot; 20 users</div>
-        <ul class="price-features"><li>Everything in Business</li><li>Email support</li></ul>
+        <ul class="price-features"><li>Everything in Business</li><li>Priority support</li></ul>
+        <a href="mailto:support@taskautomateai.co.za?subject=Enterprise Plan Enquiry" class="price-card-btn secondary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box">Contact Us</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="content-section" style="background:var(--gray-50);max-width:100%;padding:60px 24px" id="faq-section">
+    <div style="max-width:1100px;margin:0 auto">
+      <h2 class="section-title">Frequently asked questions</h2>
+      <p class="section-sub" style="margin-bottom:32px">Everything you need to know</p>
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">Is my data secure? <span class="faq-arrow">&#9660;</span></button>
+          <div class="faq-a">Policy documents are never stored on our servers. Only the extracted text is sent for AI processing and discarded immediately after. All data is transmitted over HTTPS with strict security headers.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">What file types are supported? <span class="faq-arrow">&#9660;</span></button>
+          <div class="faq-a">PDF only. Password-protected PDFs are supported &mdash; you can enter the password before uploading. Scanned PDFs with selectable text also work well.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">How accurate is the AI? <span class="faq-arrow">&#9660;</span></button>
+          <div class="faq-a">Accuracy is very high for structured policy documents. The AI compares every premium, sum insured, Sasria levy, intermediary fee, and VAS item. We recommend verifying totals against original documents before client delivery.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">Can I cancel anytime? <span class="faq-arrow">&#9660;</span></button>
+          <div class="faq-a">Yes. No lock-in contracts. Cancel at any time by emailing support@taskautomateai.co.za. Your access continues until the end of your current billing period.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">Is this POPIA compliant? <span class="faq-arrow">&#9660;</span></button>
+          <div class="faq-a">Yes. No personal client data is stored on our servers. Policy text is processed in-transit and immediately discarded. Your comparison history is stored only in your own browser. See our Privacy Policy for full details.</div>
+        </div>
       </div>
     </div>
   </section>
@@ -1128,7 +1195,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
 <script>
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.6.6';
+  const APP_VERSION = '0.6.7';
 
   // ── Device ID (for free trial tracking) ─────────────────────
   function getDeviceId() {
@@ -1423,6 +1490,11 @@
       const filtered = q ? list.filter(r => (r.clientName || '').toLowerCase().includes(q)) : list;
       renderRenewalRows(filtered);
     } catch(e) { console.warn('Failed to filter history', e); }
+  };
+
+  // ── FAQ accordion ─────────────────────────────────────────────
+  window.toggleFaq = function(btn) {
+    btn.parentElement.classList.toggle('open');
   };
 
   window.deleteRenewal = function(i) {
