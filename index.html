@@ -564,6 +564,7 @@
 ═══════════════════════════════ -->
 <div class="page" id="page-subscribe">
   <div class="subscribe-wrap">
+    <div id="subscribe-banner" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:14px;font-weight:600;text-align:center"></div>
     <div class="subscribe-header">
       <h1>Choose your plan</h1>
       <p>Cancel anytime. No lock-in contracts. All plans include full AI comparison and email-ready output.</p>
@@ -818,7 +819,7 @@
     </div>
 
     <div id="upload-panel">
-      <div class="msg-error" id="err-compare"></div>
+      <div class="msg-error" id="err-compare" role="alert" aria-live="assertive"></div>
       <button id="btn-retry" onclick="retryComparison()" style="display:none;margin-top:10px;padding:10px 22px;background:var(--gray-100);color:var(--navy);border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;transition:background .15s" onmouseover="this.style.background='var(--gray-200)'" onmouseout="this.style.background='var(--gray-100)'">&#8635; Try Again</button>
       <div class="upload-grid">
         <div>
@@ -1196,7 +1197,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
 <script>
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.6.9';
+  const APP_VERSION = '0.7.0';
 
   // ── Device ID (for free trial tracking) ─────────────────────
   function getDeviceId() {
@@ -1389,25 +1390,28 @@
 
   function loadDashboard() {
     if (!currentUser) return;
-    const sub   = currentUser.subscription || {};
-    const name  = currentUser.name || currentUser.email?.split('@')[0] || 'User';
-    const plan  = sub.plan || 'Starter';
-    const limit = sub.maxComparisons || 25;
-    const count = sub.comparisonsUsed || 0;
+    const sub     = currentUser.subscription || {};
+    const name    = currentUser.name || currentUser.email?.split('@')[0] || 'User';
+    const isTrial = !sub.plan || sub.plan === 'none' || sub.plan === 'trial';
+    const plan    = isTrial ? 'Free Trial' : (sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1));
+    const limit   = isTrial ? 5 : (sub.maxComparisons || 25);
+    const count   = sub.comparisonsUsed || 0;
     document.getElementById('dash-name').textContent  = name;
     document.getElementById('dash-count').textContent = count;
     document.getElementById('dash-limit').textContent = limit;
-    document.getElementById('dash-tier').textContent  = plan.charAt(0).toUpperCase() + plan.slice(1);
+    document.getElementById('dash-tier').textContent  = plan;
     const planLimitEl = g('dash-plan-limit');
-    if (planLimitEl) planLimitEl.textContent = limit + ' comparisons per month';
+    if (planLimitEl) planLimitEl.textContent = isTrial ? '5 lifetime free comparisons' : (limit + ' comparisons per month');
     const pct = Math.min(100, Math.round(count / limit * 100));
     document.getElementById('dash-bar').style.width      = pct + '%';
     document.getElementById('dash-bar').style.background = pct >= 90 ? 'var(--red)' : pct >= 75 ? 'var(--amber)' : 'var(--blue)';
     const limitWarning = g('dash-limit-warning');
     if (limitWarning) {
       if (pct >= 90) {
-        const msg = pct >= 100 ? 'You\u2019ve reached your monthly limit.' : 'You\u2019re nearly at your monthly limit.';
-        limitWarning.innerHTML = `${msg} <a href="#" onclick="showPage('subscribe');return false;" style="display:inline-block;margin-left:10px;background:var(--navy);color:#fff;padding:4px 14px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none">Upgrade Plan</a>`;
+        const msg = isTrial
+          ? (pct >= 100 ? 'You\u2019ve used all 5 free comparisons.' : 'You\u2019re nearly out of free comparisons.')
+          : (pct >= 100 ? 'You\u2019ve reached your monthly limit.' : 'You\u2019re nearly at your monthly limit.');
+        limitWarning.innerHTML = `${msg} <a href="#" onclick="showPage('subscribe');return false;" style="display:inline-block;margin-left:10px;background:var(--navy);color:#fff;padding:4px 14px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none">${isTrial ? 'View Plans' : 'Upgrade Plan'}</a>`;
         limitWarning.style.display = 'block';
       } else { limitWarning.style.display = 'none'; }
     }
@@ -2112,14 +2116,15 @@
     if (resp.status === 402) {
       const d = await resp.json().catch(() => ({}));
       g('proc-panel').classList.remove('show');
-      g('btn-compare').disabled = false;
-      g('btn-compare').textContent = 'Analyse Renewal';
+      g('upload-panel').style.display = 'block';
+      g('results-panel').classList.remove('show');
+      resetSteps();
       if (d.error === 'trial_exhausted') {
-        showErr('err-compare', 'You have used all 5 free renewals. Please subscribe to continue.');
         showPage('subscribe');
+        showSubscribeBanner('You\u2019ve used all 5 free comparisons. Choose a plan to continue.');
       } else if (d.error === 'quota_exceeded') {
-        showErr('err-compare', 'You have reached your plan limit. Please upgrade to continue.');
         showPage('subscribe');
+        showSubscribeBanner('You\u2019ve reached your plan\u2019s comparison limit. Upgrade to continue.');
       } else if (d.error === 'unauthenticated') {
         showPage('login');
       }
@@ -2533,6 +2538,7 @@ ${sectionHeader('Premium Breakdown')}
     if (page === 'compare') { autoFillSavedPasswords(); renderNoteTemplates(); }
     if (page === 'team') loadTeam();
     if (page === 'settings') loadSettingsPage();
+    if (page === 'subscribe') { const sb = g('subscribe-banner'); if (sb) sb.style.display = 'none'; }
   };
 
   window.scrollToPricing = function() {
@@ -2546,6 +2552,7 @@ ${sectionHeader('Premium Breakdown')}
   function clearErr(id) { g(id).className='msg-error'; }
   function showOk(id, msg) { const el=g(id); el.textContent=msg; el.className='msg-success show'; }
   function clearOk(id) { g(id).className='msg-success'; }
+  function showSubscribeBanner(msg) { const el = g('subscribe-banner'); if (!el) return; el.textContent = msg; el.style.display = 'block'; }
 
   // ── PDF Password Manager ─────────────────────────────────────
   function passStorageKey(side) {
