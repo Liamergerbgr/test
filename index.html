@@ -1121,11 +1121,18 @@
   function getDeviceId() {
     let id = localStorage.getItem('rs_device_id');
     if (!id) {
-      id = crypto.randomUUID ? crypto.randomUUID() :
-        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-          const r = Math.random() * 16 | 0;
-          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-        });
+      if (crypto.randomUUID) {
+        id = crypto.randomUUID();
+      } else {
+        // Cryptographically secure fallback via getRandomValues (no Math.random)
+        const buf = new Uint8Array(16);
+        crypto.getRandomValues(buf);
+        buf[6] = (buf[6] & 0x0f) | 0x40; // version 4
+        buf[8] = (buf[8] & 0x3f) | 0x80; // variant
+        id = [...buf].map((b, i) =>
+          ([4, 6, 8, 10].includes(i) ? '-' : '') + b.toString(16).padStart(2, '0')
+        ).join('');
+      }
       localStorage.setItem('rs_device_id', id);
     }
     return id;
