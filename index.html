@@ -703,17 +703,21 @@
     <div style="margin-top:28px">
       <div class="dash-section-title">Renewals Processed <span id="dash-history-count"></span><button id="btn-clear-history" onclick="clearAllHistory()" style="display:none;margin-left:auto;background:none;border:1px solid var(--gray-200);color:var(--gray-600);font-size:12px;font-weight:500;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:Inter,sans-serif">Clear all</button></div>
       <div style="background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-200);overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--gray-100)">
+          <input type="text" id="history-search" placeholder="&#128269; Search by client name…" oninput="filterHistory(this.value)" style="width:100%;box-sizing:border-box;padding:7px 12px;font-size:13px;font-family:Inter,sans-serif;border:1px solid var(--gray-200);border-radius:6px;outline:none;color:var(--navy)" />
+        </div>
         <table style="width:100%;border-collapse:collapse">
           <thead>
             <tr style="background:var(--navy)">
               <th style="padding:11px 14px;text-align:left;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Client Name</th>
               <th style="padding:11px 14px;text-align:left;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Date</th>
               <th style="padding:11px 14px;text-align:right;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Duration</th>
+              <th style="padding:11px 14px;text-align:right;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Change</th>
               <th style="padding:11px 14px;text-align:right;font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.5px">Actions</th>
             </tr>
           </thead>
           <tbody id="renewals-tbody">
-            <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--gray-400);font-style:italic">No comparisons yet.</td></tr>
+            <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--gray-400);font-style:italic">No comparisons yet.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1124,7 +1128,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
 <script>
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.6.5';
+  const APP_VERSION = '0.6.6';
 
   // ── Device ID (for free trial tracking) ─────────────────────
   function getDeviceId() {
@@ -1333,8 +1337,11 @@
     document.getElementById('dash-bar').style.background = pct >= 90 ? 'var(--red)' : pct >= 75 ? 'var(--amber)' : 'var(--blue)';
     const limitWarning = g('dash-limit-warning');
     if (limitWarning) {
-      if (pct >= 90) { limitWarning.textContent = pct >= 100 ? 'You\u2019ve reached your monthly limit. Contact us to upgrade.' : 'You\u2019re nearly at your monthly limit. Consider upgrading your plan.'; limitWarning.style.display = 'block'; }
-      else { limitWarning.style.display = 'none'; }
+      if (pct >= 90) {
+        const msg = pct >= 100 ? 'You\u2019ve reached your monthly limit.' : 'You\u2019re nearly at your monthly limit.';
+        limitWarning.innerHTML = `${msg} <a href="#" onclick="showPage('subscribe');return false;" style="display:inline-block;margin-left:10px;background:var(--navy);color:#fff;padding:4px 14px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none">Upgrade Plan</a>`;
+        limitWarning.style.display = 'block';
+      } else { limitWarning.style.display = 'none'; }
     }
     loadRenewals();
   }
@@ -1345,45 +1352,78 @@
   function saveRenewalRecord(clientName, durationSecs, resultData, resultHtml, notes) {
     try {
       const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
-      list.unshift({ clientName, durationSecs, completedAt: new Date().toISOString(), result: resultData || null, resultHtml: resultHtml || '', notes: notes || '' });
+      const pctChange = (resultData?.oldTotal && resultData?.newTotal && resultData.oldTotal !== 0)
+        ? Math.round(((resultData.newTotal - resultData.oldTotal) / resultData.oldTotal) * 100) : null;
+      list.unshift({ clientName, durationSecs, completedAt: new Date().toISOString(), pctChange, result: resultData || null, resultHtml: resultHtml || '', notes: notes || '' });
       if (list.length > 20) list.length = 20;
       localStorage.setItem(renewalsKey(), JSON.stringify(list));
     } catch(e) { console.warn('Failed to save renewal record', e); }
   }
+  function renderRenewalRows(list) {
+    const tbody = g('renewals-tbody');
+    if (!tbody) return;
+    if (!list.length) {
+      const isFiltered = (g('history-search')?.value || '').trim().length > 0;
+      tbody.innerHTML = isFiltered
+        ? `<tr><td colspan="5" style="padding:24px 20px;text-align:center;color:var(--gray-400)">No results match your search.</td></tr>`
+        : `<tr><td colspan="5" style="padding:36px 20px;text-align:center">
+            <div style="font-size:32px;margin-bottom:10px">&#128196;</div>
+            <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px">No comparisons yet</div>
+            <div style="font-size:13px;color:var(--gray-400);margin-bottom:16px">Upload two policy PDFs to run your first AI comparison</div>
+            <button onclick="showPage('compare')" style="background:var(--blue);color:#fff;border:none;padding:10px 22px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Start Your First Comparison &rarr;</button>
+          </td></tr>`;
+      return;
+    }
+    // Build a real-index lookup so delete still works on the full list
+    const fullList = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
+    tbody.innerHTML = list.map(r => {
+      const i = fullList.indexOf(r);
+      const date = r.completedAt ? new Date(r.completedAt).toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+      const dur = r.durationSecs ? (r.durationSecs >= 60 ? Math.floor(r.durationSecs/60) + 'm ' + (r.durationSecs%60) + 's' : r.durationSecs + 's') : '—';
+      let changeTd;
+      if (typeof r.pctChange === 'number') {
+        const inc = r.pctChange >= 0;
+        changeTd = `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100);text-align:right">
+          <span style="display:inline-block;padding:3px 8px;border-radius:12px;font-size:12px;font-weight:700;background:${inc?'#fee2e2':'#dcfce7'};color:${inc?'#dc2626':'#16a34a'}">${inc?'▲':'▼'} ${inc?'+':''}${r.pctChange}%</span>
+        </td>`;
+      } else {
+        changeTd = `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100);text-align:right;color:var(--gray-400)">—</td>`;
+      }
+      const delBtn = `<button onclick="deleteRenewal(${i})" title="Delete this record" style="background:none;border:1px solid var(--gray-200);color:var(--gray-400);padding:5px 9px;border-radius:6px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;margin-left:6px" onmouseover="this.style.borderColor='#dc2626';this.style.color='#dc2626'" onmouseout="this.style.borderColor='var(--gray-200)';this.style.color='var(--gray-400)'">&#128465;</button>`;
+      const actionsTd = r.result
+        ? `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100);text-align:right"><button onclick="viewStoredComparison(${i})" style="background:var(--blue);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">View</button>${delBtn}</td>`
+        : `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100);text-align:right">${delBtn}</td>`;
+      return `<tr>
+        <td style="padding:11px 14px;font-size:13px;font-weight:600;color:var(--navy);border-bottom:1px solid var(--gray-100)">${r.clientName||'—'}</td>
+        <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100)">${date}</td>
+        <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100);text-align:right">${dur}</td>
+        ${changeTd}
+        ${actionsTd}
+      </tr>`;
+    }).join('');
+  }
+
   function loadRenewals() {
     try {
       const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
-      const tbody = g('renewals-tbody');
-      if (!tbody) return;
       const countEl = g('dash-history-count');
       if (countEl) countEl.textContent = list.length ? list.length + ' total' : '';
       const clearBtn = g('btn-clear-history');
       if (clearBtn) clearBtn.style.display = list.length ? 'inline-block' : 'none';
-      if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="4" style="padding:36px 20px;text-align:center">
-          <div style="font-size:32px;margin-bottom:10px">&#128196;</div>
-          <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px">No comparisons yet</div>
-          <div style="font-size:13px;color:var(--gray-400);margin-bottom:16px">Upload two policy PDFs to run your first AI comparison</div>
-          <button onclick="showPage('compare')" style="background:var(--blue);color:#fff;border:none;padding:10px 22px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Start Your First Comparison &rarr;</button>
-        </td></tr>`;
-        return;
-      }
-      tbody.innerHTML = list.map((r, i) => {
-        const date = r.completedAt ? new Date(r.completedAt).toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
-        const dur = r.durationSecs ? (r.durationSecs >= 60 ? Math.floor(r.durationSecs/60) + 'm ' + (r.durationSecs%60) + 's' : r.durationSecs + 's') : '—';
-        const delBtn = `<button onclick="deleteRenewal(${i})" title="Delete this record" style="background:none;border:1px solid var(--gray-200);color:var(--gray-400);padding:5px 9px;border-radius:6px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;margin-left:6px" onmouseover="this.style.borderColor='#dc2626';this.style.color='#dc2626'" onmouseout="this.style.borderColor='var(--gray-200)';this.style.color='var(--gray-400)'">&#128465;</button>`;
-        const viewBtn = r.result
-          ? `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100);text-align:right"><button onclick="viewStoredComparison(${i})" style="background:var(--blue);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">View</button>${delBtn}</td>`
-          : `<td style="padding:11px 14px;border-bottom:1px solid var(--gray-100);text-align:right">${delBtn}</td>`;
-        return `<tr>
-          <td style="padding:11px 14px;font-size:13px;font-weight:600;color:var(--navy);border-bottom:1px solid var(--gray-100)">${r.clientName||'—'}</td>
-          <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100)">${date}</td>
-          <td style="padding:11px 14px;font-size:13px;color:var(--gray-600);border-bottom:1px solid var(--gray-100);text-align:right">${dur}</td>
-          ${viewBtn}
-        </tr>`;
-      }).join('');
+      const searchEl = g('history-search');
+      if (searchEl) searchEl.value = '';
+      renderRenewalRows(list);
     } catch(e) { console.warn('Failed to load renewals', e); }
   }
+
+  window.filterHistory = function(query) {
+    try {
+      const q = (query || '').toLowerCase().trim();
+      const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
+      const filtered = q ? list.filter(r => (r.clientName || '').toLowerCase().includes(q)) : list;
+      renderRenewalRows(filtered);
+    } catch(e) { console.warn('Failed to filter history', e); }
+  };
 
   window.deleteRenewal = function(i) {
     try {
