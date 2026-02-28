@@ -768,6 +768,8 @@
       <button class="btn-white" onclick="showPage('compare')">Start Renewal Comparison &#8594;</button>
     </div>
 
+    <div class="msg-error" id="err-dashboard" style="margin-bottom:16px"></div>
+
     <div style="margin-top:28px">
       <div class="dash-section-title">Renewals Processed <span id="dash-history-count"></span><button id="btn-clear-history" onclick="clearAllHistory()" style="display:none;margin-left:auto;background:none;border:1px solid var(--gray-200);color:var(--gray-600);font-size:12px;font-weight:500;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:Inter,sans-serif">Clear all</button></div>
       <div style="background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-200);overflow:hidden">
@@ -1013,7 +1015,7 @@
     <p><strong>How long does a comparison take?</strong><br>Most comparisons complete in 30&ndash;90 seconds depending on document length and AI processing time.</p>
     <p><strong>Where is my comparison history stored?</strong><br>Your 20 most recent comparison results are stored in your browser's local storage, tied to your account. They persist across browser restarts but will be cleared if you clear your browser data.</p>
     <p><strong>What happens to the PDFs I upload?</strong><br>Only the extracted text from your PDFs is sent to our AI for analysis. The raw PDF files are never uploaded to our servers. Extracted text is not stored after processing.</p>
-    <p><strong>I hit my monthly comparison limit. What do I do?</strong><br>Contact us to upgrade your plan. Upgrades take effect immediately.</p>
+    <p><strong>I hit my comparison limit. What do I do?</strong><br>Visit the <a onclick="showPage('subscribe')" href="#" style="color:var(--blue)">Plans page</a> to choose a subscription, or email us at <a href="mailto:support@taskautomateai.co.za" style="color:var(--blue)">support@taskautomateai.co.za</a>. Upgrades take effect immediately.</p>
     <p><strong>Can I view a past comparison result?</strong><br>Yes &mdash; click the "View" button next to any comparison in your dashboard history to re-open the full result.</p>
     <h2>Billing</h2>
     <p>For billing queries, plan upgrades, or cancellations, email <a href="mailto:support@taskautomateai.co.za" style="color:var(--blue)">support@taskautomateai.co.za</a> with your account email address.</p>
@@ -1786,11 +1788,14 @@
     const emailEl = g('set-email');
     if (nameEl)  nameEl.value  = currentUser.name  || '';
     if (emailEl) emailEl.value = currentUser.email || '';
-    const sub = currentUser.subscription || {};
+    const sub      = currentUser.subscription || {};
+    const isTrial  = !sub.plan || sub.plan === 'none' || sub.plan === 'trial';
     const planEl   = g('set-plan-name');
     const detailEl = g('set-plan-detail');
-    if (planEl)   planEl.textContent   = sub.plan || 'Starter';
-    if (detailEl) detailEl.textContent = (sub.comparisonsUsed || 0) + ' / ' + (sub.maxComparisons || 25) + ' comparisons used';
+    if (planEl)   planEl.textContent   = isTrial ? 'Free Trial' : (sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1));
+    if (detailEl) detailEl.textContent = isTrial
+      ? ((sub.comparisonsUsed || 0) + ' / 5 lifetime free comparisons used')
+      : ((sub.comparisonsUsed || 0) + ' / ' + (sub.maxComparisons || 25) + ' comparisons used this month');
   }
 
   window.doSaveProfile = async function() {
@@ -2798,13 +2803,13 @@ ${sectionHeader('Premium Breakdown')}
     try {
       const list = JSON.parse(localStorage.getItem(renewalsKey()) || '[]');
       const record = list[index];
-      if (!record || !record.result) { alert('Full result data is not available for this comparison. Only new comparisons are viewable.'); return; }
+      if (!record || !record.result) { showErr('err-dashboard', 'Full result data is not available for this comparison. Only new comparisons are viewable.'); return; }
       htmlToCopy = record.result ? buildEmailHtml(record.result, record.notes || '') : '';
       showPage('viewer');
       renderViewerResult(record);
     } catch(e) {
       console.warn('Failed to load stored comparison', e);
-      alert('Could not load this comparison.');
+      showErr('err-dashboard', 'Could not load this comparison. Please try again.');
     }
   };
 
