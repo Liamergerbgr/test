@@ -945,27 +945,70 @@
     <button class="trust-back" onclick="history.back()">&#8592; Back</button>
     <h1>Privacy Policy</h1>
     <div class="trust-date">Last updated: February 2026</div>
-    <p>RenewalScan AI ("we", "our", "us") is operated by TaskAutomateAI. This policy explains what personal data we collect, why we collect it, and how we protect it.</p>
-    <h2>1. Data We Collect</h2>
+    <p>RenewalScan AI ("we", "our", "us") is operated by TaskAutomateAI (Pty) Ltd. This policy explains what personal information we collect, why we collect it, how we use and protect it, and what rights you have over it. This policy is compliant with the Protection of Personal Information Act 4 of 2013 (POPIA/POPI Act).</p>
+
+    <h2>1. Responsible Party &amp; Information Officer</h2>
+    <p>The responsible party for your personal information is TaskAutomateAI (Pty) Ltd. For all privacy-related queries, requests, or complaints, contact our Information Officer at <a href="mailto:support@taskautomateai.co.za" style="color:var(--blue)">support@taskautomateai.co.za</a>.</p>
+
+    <h2>2. Personal Information We Collect</h2>
     <ul>
       <li><strong>Account data:</strong> Your name, email address, and hashed password, stored securely on our servers.</li>
-      <li><strong>Usage data:</strong> A monthly count of comparisons you run, stored in our database under your user ID.</li>
-      <li><strong>Comparison history:</strong> The output of each policy comparison — including client name, date, duration, and the comparison result — stored locally in your browser and associated with your account.</li>
-      <li><strong>Policy document text:</strong> The text extracted from PDFs you upload is sent to our AI processing API for analysis. This text is not stored persistently after processing is complete.</li>
-      <li><strong>Trial usage identifiers:</strong> To track free trial usage, we store a one-way hashed (SHA-256) version of your IP address and a browser-generated device ID. The raw IP address is never stored.</li>
+      <li><strong>Usage data:</strong> A count of comparisons you run, stored in our database under your user ID, to enforce your plan limits.</li>
+      <li><strong>Session data:</strong> A session token stored in your browser to keep you signed in. Sessions expire after 30 days of inactivity and are deleted on logout.</li>
+      <li><strong>Comparison history:</strong> The output of each policy comparison — including client name, date, and comparison result — stored in your browser's local storage only. This data is never transmitted to or stored on our servers.</li>
+      <li><strong>Policy document text:</strong> Text extracted from PDFs you upload is sent to our AI processing API for analysis only. This text is not retained after processing is complete.</li>
+      <li><strong>Trial usage identifiers:</strong> To track free trial usage, we store a one-way hashed (SHA-256) version of your IP address and a browser-generated anonymous device ID. Raw IP addresses are never stored on our servers.</li>
     </ul>
-    <h2>2. How We Use Your Data</h2>
-    <p>We use your data exclusively to provide the RenewalScan AI service: authenticating your account, tracking your monthly usage against your plan limit, and storing your comparison history so you can revisit past results. We do not use your data for advertising, profiling, or any purpose other than operating this service.</p>
-    <h2>3. Data Sharing</h2>
-    <p>We do not sell, rent, or share your personal data with third parties for marketing or commercial purposes. Policy document text submitted for comparison is transmitted to Anthropic, Inc. (developer of the Claude AI model) via an API call for AI analysis. Anthropic does not retain this content after processing. This constitutes a cross-border transfer of data (Anthropic is based in the United States). By creating an account, you consent to this processing. You can review Anthropic's privacy policy at <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener" style="color:var(--blue)">anthropic.com/privacy</a>.</p>
-    <h2>4. Data Retention</h2>
-    <p>Your account data is retained for as long as your account is active. Your comparison history is capped at your 20 most recent comparisons and is stored in your browser's local storage. You may request deletion of your account and all associated data at any time by contacting support.</p>
-    <h2>5. Your Rights (GDPR / POPIA)</h2>
-    <p>If you are located in the European Union or South Africa, you have the right to access, correct, or request deletion of your personal data. To exercise these rights, contact us at the address below.</p>
-    <h2>6. Security</h2>
-    <p>All data is transmitted over HTTPS. Passwords are hashed using PBKDF2 and never stored in plain text. Comparison results are stored in your browser's local storage, scoped to your account.</p>
-    <h2>7. Contact</h2>
-    <p>For privacy-related requests, contact: <a href="mailto:support@taskautomateai.co.za" style="color:var(--blue)">support@taskautomateai.co.za</a></p>
+
+    <h2>3. Lawful Basis for Processing</h2>
+    <p>We process your personal information on the following lawful grounds under POPIA:</p>
+    <ul>
+      <li><strong>Contractual necessity:</strong> To create and manage your account and deliver the RenewalScan AI service you have signed up for.</li>
+      <li><strong>Consent:</strong> For the transmission of policy document text to our AI processing provider (Anthropic, Inc.) for AI analysis. You provide this consent at account registration.</li>
+      <li><strong>Legitimate interest:</strong> To protect the integrity of our free trial system and prevent abuse, using hashed identifiers only.</li>
+    </ul>
+
+    <h2>4. How We Use Your Data</h2>
+    <p>We use your personal information exclusively to provide the RenewalScan AI service: authenticating your account, enforcing your plan usage limits, and operating the comparison feature. We do not use your data for advertising, profiling, or any purpose beyond operating this service.</p>
+
+    <h2>5. Data Sharing and Cross-Border Transfers</h2>
+    <p>We do not sell, rent, or share your personal information with third parties for marketing purposes. Policy document text submitted for comparison is transmitted to Anthropic, Inc. (United States) via an encrypted API call for AI analysis only. Anthropic does not retain this content after processing. This constitutes a cross-border transfer under POPIA Section 72. By creating an account you consent to this transfer. You may review Anthropic's privacy policy at <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener" style="color:var(--blue)">anthropic.com/privacy</a>.</p>
+
+    <h2>6. Data Retention</h2>
+    <ul>
+      <li><strong>Account data:</strong> Retained for as long as your account is active. Deleted within 30 days of an account deletion request.</li>
+      <li><strong>Session tokens:</strong> Expire automatically after 30 days, or immediately on logout.</li>
+      <li><strong>Hashed trial identifiers:</strong> Retained indefinitely to prevent free trial abuse. These cannot be used to identify you directly.</li>
+      <li><strong>Comparison history:</strong> Stored only in your browser's local storage. Automatically capped at your 20 most recent comparisons. Cleared when you clear your browser data.</li>
+      <li><strong>Policy document text:</strong> Not retained — discarded immediately after AI processing.</li>
+    </ul>
+
+    <h2>7. Your Rights Under POPIA</h2>
+    <p>As a data subject under POPIA, you have the following rights:</p>
+    <ul>
+      <li><strong>Right of access:</strong> Request a copy of the personal information we hold about you.</li>
+      <li><strong>Right to correction or deletion:</strong> Request that we correct inaccurate information or delete your personal information where we are no longer lawfully entitled to retain it.</li>
+      <li><strong>Right to object:</strong> Object to the processing of your personal information in certain circumstances.</li>
+      <li><strong>Right to data portability:</strong> Request an export of your account data in a structured format using the "Export My Data" feature in your account settings.</li>
+      <li><strong>Right to delete your account:</strong> Delete your account and all associated personal information at any time from your account settings.</li>
+      <li><strong>Right to lodge a complaint:</strong> If you believe we have violated POPIA, you may lodge a complaint with the Information Regulator of South Africa at <a href="https://www.inforegulator.org.za" target="_blank" rel="noopener" style="color:var(--blue)">inforegulator.org.za</a> or by email to <a href="mailto:inforeg@justice.gov.za" style="color:var(--blue)">inforeg@justice.gov.za</a>.</li>
+    </ul>
+    <p>To exercise any of the above rights, contact our Information Officer at <a href="mailto:support@taskautomateai.co.za" style="color:var(--blue)">support@taskautomateai.co.za</a>. We will respond within 30 days.</p>
+
+    <h2>8. Security Safeguards</h2>
+    <p>All data is transmitted over HTTPS (TLS encryption). Passwords are hashed using PBKDF2 with a salt and are never stored in plain text. Session tokens are cryptographically random. We maintain technical and organisational measures to protect personal information against unauthorised access, loss, damage, or destruction. Access to our database is restricted to authorised personnel only.</p>
+
+    <h2>9. Data Breach Notification</h2>
+    <p>In the event of a data breach that is likely to result in significant harm to you, we will notify the Information Regulator of South Africa and affected data subjects as required by POPIA Section 22, without undue delay and within the timeframes prescribed by law.</p>
+
+    <h2>10. Cookies and Local Storage</h2>
+    <p>We do not use tracking cookies. We use browser local storage to store your session token, comparison history, saved passwords (encrypted in-browser), and application preferences. This data remains on your device and is never transmitted to our servers except for the session token used for authentication.</p>
+
+    <h2>11. Changes to This Policy</h2>
+    <p>We may update this policy from time to time. The "Last updated" date at the top will reflect any changes. Continued use of the service after a policy update constitutes acceptance of the revised policy.</p>
+
+    <h2>12. Contact</h2>
+    <p>For any privacy-related requests or questions, contact our Information Officer: <a href="mailto:support@taskautomateai.co.za" style="color:var(--blue)">support@taskautomateai.co.za</a></p>
   </div>
 </div>
 
@@ -1199,7 +1242,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
 <script>
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.7.0';
+  const APP_VERSION = '0.7.2';
 
   // ── Device ID (for free trial tracking) ─────────────────────
   function getDeviceId() {
@@ -1868,6 +1911,11 @@
       const data = await res.json();
       if (!res.ok || data.error) { list.innerHTML = ''; showErr('err-team', data.error || 'Could not load team.'); return; }
       teamMembers = data.members || [];
+      // Show/hide invite section based on caller's role
+      const myMember = teamMembers.find(m => m.userId === currentUser.userId);
+      const myRole = myMember?.role || 'member';
+      const invSec = g('team-invite-section');
+      if (invSec) invSec.style.display = (myRole === 'owner' || myRole === 'admin') ? '' : 'none';
       renderTeam();
     } catch(e) {
       list.innerHTML = '';
@@ -1879,7 +1927,15 @@
     const list = g('team-members-list');
     if (!list) return;
     if (!teamMembers.length) { list.innerHTML = '<p style="color:var(--gray-400);font-size:13px">No team members yet.</p>'; return; }
-    const isOwner = teamMembers.find(m => m.userId === currentUser.userId)?.role === 'owner';
+    const myMemberRecord = teamMembers.find(m => m.userId === currentUser.userId);
+    const isOwner = myMemberRecord?.role === 'owner';
+    const isAdminOrOwner = isOwner || myMemberRecord?.role === 'admin';
+    // Update seat count display
+    const countEl = g('team-count');
+    if (countEl) {
+      const maxSeats = currentUser.subscription?.maxSeats;
+      countEl.textContent = maxSeats ? `(${teamMembers.length} of ${maxSeats} seats used)` : `(${teamMembers.length} member${teamMembers.length !== 1 ? 's' : ''})`;
+    }
     list.innerHTML = teamMembers.map(m => {
       const isMe  = m.userId === currentUser.userId;
       const initials = (m.name || m.email || '?').charAt(0).toUpperCase();
