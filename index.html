@@ -1054,6 +1054,15 @@
       </div>
     </div>
 
+    <div class="settings-section">
+      <div class="settings-section-title">Your Data (POPIA)</div>
+      <p style="font-size:13px;color:var(--gray-600);margin-bottom:8px">Under POPIA you have the right to access the personal data we hold about you. Download a copy of your account information as a JSON file.</p>
+      <p style="font-size:12px;color:var(--gray-400);margin-bottom:16px">Note: Your comparison history is stored only in this browser and is not held on our servers — it will be included in the export automatically.</p>
+      <div class="msg-error" id="err-export-data"></div>
+      <div class="msg-success" id="ok-export-data"></div>
+      <button class="btn-sm" style="font-size:13px;padding:8px 18px;background:var(--navy);color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="doExportData()">Download my data</button>
+    </div>
+
     <div class="settings-section" style="border-color:#fca5a5">
       <div class="settings-section-title" style="color:#dc2626;border-bottom-color:#fca5a5">Sign Out</div>
       <p style="font-size:13px;color:var(--gray-600);margin-bottom:16px">This will end your session on this device.</p>
@@ -1111,11 +1120,11 @@
 <!-- ═══════════════════════════════
      SCRIPTS
 ═══════════════════════════════ -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha384-Yv5O+t3uE3hunW8uyrbpPW3iw6/5/Y7HitWJBLgqfMoA36NogMmy+8wWZMpn3HWc" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
 <script>
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.6.4';
+  const APP_VERSION = '0.6.5';
 
   // ── Device ID (for free trial tracking) ─────────────────────
   function getDeviceId() {
@@ -1539,6 +1548,61 @@
     } catch(e) {
       if (btn) { btn.disabled = false; btn.textContent = 'Delete my account'; }
       showErr('err-delete-account', 'Could not connect. Please contact support@taskautomateai.co.za to request account deletion.');
+    }
+  };
+
+  // ── Export My Data (POPIA data portability) ──────────────────
+  window.doExportData = async function() {
+    clearErr('err-export-data');
+    const token = currentUser?.token;
+    const uid = currentUser?.uid;
+    if (!token) { showErr('err-export-data', 'Not logged in.'); return; }
+    const btn = document.querySelector('[onclick="doExportData()"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Preparing…'; }
+    try {
+      const resp = await fetch(N8N_BASE + '/auth/export-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        showErr('err-export-data', data.error || 'Failed to retrieve data. Please try again.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Download my data'; }
+        return;
+      }
+      // Gather localStorage data
+      const history = JSON.parse(localStorage.getItem('pdf_renewals_' + uid) || '[]');
+      const savedNotes = JSON.parse(localStorage.getItem('pdfnotes_' + uid) || '[]');
+      const exportPayload = {
+        exportGeneratedAt: data.data?.exportGeneratedAt || new Date().toISOString(),
+        serverData: {
+          email: data.data?.email,
+          name: data.data?.name || '',
+          accountCreated: data.data?.accountCreated,
+          plan: data.data?.plan,
+          maxComparisons: data.data?.maxComparisons,
+          comparisonsUsed: data.data?.comparisonsUsed
+        },
+        localData: {
+          comparisonHistory: history,
+          savedNotes: savedNotes,
+          note: 'localData is stored only in this browser and was never transmitted to our servers.'
+        }
+      };
+      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'renewalscan-data-' + new Date().toISOString().slice(0,10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showOk('ok-export-data', 'Your data export has been downloaded.');
+    } catch(e) {
+      showErr('err-export-data', 'Could not connect. Please try again.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Download my data'; }
     }
   };
 
