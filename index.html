@@ -2198,12 +2198,14 @@
         const siColor   = siChanged ? (siUp ? '#dc2626' : '#059669') : 'var(--gray-700)';
         const siArrow   = siChanged ? (siUp ? ' &#9650;' : ' &#9660;') : '';
         const siOld     = anyHasSI ? `<td style="text-align:right;color:var(--gray-600)">${c.oldInsuredAmountFormatted||'—'}</td>` : '';
-        const siNew     = anyHasSI ? `<td style="text-align:right;color:${siColor};font-weight:${siChanged?'700':'400'}">${c.newInsuredAmountFormatted||'—'}${siArrow}</td>` : '';
+        const siAriaLabel = siChanged ? ` aria-label="${siUp?'increased':'decreased'} to ${c.newInsuredAmountFormatted||''}"` : '';
+        const siNew     = anyHasSI ? `<td style="text-align:right;color:${siColor};font-weight:${siChanged?'700':'400'}"${siAriaLabel}>${c.newInsuredAmountFormatted||'—'}<span aria-hidden="true">${siArrow}</span></td>` : '';
+        const changeAriaLabel = none ? 'No change' : `${up?'Increase':'Decrease'}: ${c.differenceFormatted}`;
         rows += `<tr>
           <td style="font-weight:600">${esc(c.item)}</td>
           <td>${esc(c.oldPriceFormatted||'R0.00')}</td>
           <td>${esc(c.newPriceFormatted||'R0.00')}</td>
-          <td><span style="color:${cc};font-weight:700">${none?'&mdash;':ar+' '+esc(c.differenceFormatted)}</span></td>
+          <td><span role="img" aria-label="${changeAriaLabel}" style="color:${cc};font-weight:700">${none?'&mdash;':ar+' '+esc(c.differenceFormatted)}</span></td>
           ${siOld}${siNew}
         </tr>`;
       });
