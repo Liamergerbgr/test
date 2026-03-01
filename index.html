@@ -2630,7 +2630,7 @@ ${sectionHeader('Premium Breakdown')}
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--gray-100);font-size:13px;color:var(--gray-700);background:#fff;transition:background .1s"
            onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
         <span onclick="selectSavedPass('${which}','${pw.replace(/'/g,"\\'")}')">
-          ${pw}
+          ${esc(pw)}
         </span>
         <span onclick="deleteSavedPass(event,'${which}','${pw.replace(/'/g,"\\'")}',${i})"
               style="color:var(--gray-400);font-size:14px;padding:2px 6px;border-radius:4px;cursor:pointer;line-height:1"
@@ -2741,7 +2741,7 @@ ${sectionHeader('Premium Breakdown')}
       const safe = note.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--gray-100);font-size:13px;color:var(--gray-700);background:#fff;transition:background .1s;gap:8px"
            onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
-        <span style="cursor:pointer;flex:1;line-height:1.4" onmousedown="event.preventDefault()" onclick="selectSavedNote('${safe}')">${preview}</span>
+        <span style="cursor:pointer;flex:1;line-height:1.4" onmousedown="event.preventDefault()" onclick="selectSavedNote('${safe}')">${esc(preview)}</span>
         <span onclick="deleteSavedNote(event,'${safe}')" onmousedown="event.preventDefault()"
               style="color:var(--gray-400);font-size:14px;padding:2px 6px;border-radius:4px;cursor:pointer;flex-shrink:0"
               onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--gray-400)'"
