@@ -358,11 +358,26 @@
       <button class="nav-link" onclick="showPage('compare')">Renewals</button>
       <button class="nav-link" onclick="showPage('team')">Team</button>
       <button class="nav-link" onclick="showPage('settings')">Settings</button>
+      <button class="nav-link" id="nav-admin-btn" style="display:none;color:#dc2626;font-weight:700" onclick="showPage('admin')">Admin</button>
       <button class="nav-signout" onclick="doSignOut()">Sign out</button>
     </div>
   </div>
 </nav>
 <div class="toast" id="toast">&#10003; HTML copied — paste into Gmail or Outlook</div>
+
+<!-- Ban modal -->
+<div id="ban-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:none;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:40px 36px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center">
+    <div style="font-size:40px;margin-bottom:12px">🚫</div>
+    <h2 style="color:#dc2626;margin:0 0 12px;font-size:20px">Account Suspended</h2>
+    <p style="color:#4b5563;line-height:1.6;margin:0 0 20px">Your account has been suspended due to suspicious activity. If you believe this is a mistake, you can appeal below.</p>
+    <a href="mailto:support@taskautomateai.co.za?subject=Account%20Suspension%20Appeal&body=My%20email%20address%3A%20" id="ban-appeal-link"
+       style="display:inline-block;background:#1e3a5f;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;margin-bottom:12px">Appeal via Email</a>
+    <br>
+    <button onclick="document.getElementById('ban-modal').style.display='none'"
+            style="background:none;border:none;color:#9ca3af;font-size:13px;cursor:pointer;margin-top:4px">Close</button>
+  </div>
+</div>
 <div class="update-bar" id="update-bar">
   <span>&#8593; A new version is available</span>
   <button class="update-bar-btn" onclick="location.reload()">Refresh now</button>
@@ -1211,13 +1226,117 @@
 </div>
 
 <!-- ═══════════════════════════════
+     ADMIN
+═══════════════════════════════ -->
+<div class="page" id="page-admin">
+  <div class="dash-wrap">
+    <div class="page-title-bar">
+      <h2 class="page-title">Admin Panel</h2>
+    </div>
+
+    <!-- Tab bar -->
+    <div style="display:flex;gap:8px;margin-bottom:24px;border-bottom:2px solid var(--gray-200);padding-bottom:0">
+      <button id="adm-tab-users" onclick="adminTab('users')" style="padding:10px 20px;border:none;background:none;font-weight:600;font-size:14px;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-2px;cursor:pointer">Users</button>
+      <button id="adm-tab-active" onclick="adminTab('active')" style="padding:10px 20px;border:none;background:none;font-weight:600;font-size:14px;color:var(--gray-400);cursor:pointer">Active Sessions</button>
+      <button id="adm-tab-suspicious" onclick="adminTab('suspicious')" style="padding:10px 20px;border:none;background:none;font-weight:600;font-size:14px;color:var(--gray-400);cursor:pointer">Suspicious Activity</button>
+    </div>
+
+    <div id="adm-loading" style="text-align:center;padding:40px;color:var(--gray-400)">Loading...</div>
+    <div id="adm-error" style="display:none;color:#dc2626;padding:12px;background:#fef2f2;border-radius:8px;margin-bottom:16px"></div>
+
+    <!-- Users tab -->
+    <div id="adm-pane-users" style="display:none">
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:var(--gray-50);text-align:left">
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">User</th>
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">Plan</th>
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">Usage</th>
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">Sessions</th>
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">Status</th>
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adm-users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Active sessions tab -->
+    <div id="adm-pane-active" style="display:none">
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:var(--gray-50);text-align:left">
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">User</th>
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">Plan</th>
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">Active Sessions</th>
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adm-active-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Suspicious activity tab -->
+    <div id="adm-pane-suspicious" style="display:none">
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:var(--gray-50);text-align:left">
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">Event</th>
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">Email</th>
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-200)">IP</th>
+              <th style="padding:10px 12px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200)">Time</th>
+            </tr>
+          </thead>
+          <tbody id="adm-suspicious-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Change Plan modal -->
+    <div id="adm-plan-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:8000;align-items:center;justify-content:center">
+      <div style="background:#fff;border-radius:12px;padding:32px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+        <h3 style="margin:0 0 20px;font-size:17px">Change Plan</h3>
+        <input type="hidden" id="adm-plan-userid">
+        <div style="margin-bottom:14px">
+          <label style="font-size:13px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:6px">Plan</label>
+          <select id="adm-plan-select" style="width:100%;padding:9px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:14px">
+            <option value="trial">Trial (5 comparisons)</option>
+            <option value="solo">Solo (25 comparisons)</option>
+            <option value="team">Team (100 comparisons)</option>
+            <option value="agency">Agency (300 comparisons)</option>
+            <option value="enterprise">Enterprise (unlimited)</option>
+          </select>
+        </div>
+        <div style="margin-bottom:20px">
+          <label style="font-size:13px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:6px">Max comparisons</label>
+          <input type="number" id="adm-plan-max" min="0" max="999999" style="width:100%;padding:9px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:14px;box-sizing:border-box" placeholder="e.g. 25">
+        </div>
+        <div style="display:flex;gap:10px">
+          <button onclick="adminSavePlan()" style="flex:1;background:var(--navy);color:#fff;border:none;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px">Save</button>
+          <button onclick="document.getElementById('adm-plan-modal').style.display='none'" style="flex:1;background:var(--gray-100);color:var(--gray-700);border:none;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-footer">
+      <a onclick="showPage('dashboard')">← Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
      SCRIPTS
 ═══════════════════════════════ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha384-Yv5O+t3uE3hunW8uyrbpPW3iw6/5/Y7HitWJBLgqfMoA36NogMmy+8wWZMpn3HWc" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
 <script>
   // ── App Version ──────────────────────────────────────────────
-  const APP_VERSION = '0.7.2';
+  const APP_VERSION = '0.7.3';
 
   // ── Device ID (for free trial tracking) ─────────────────────
   function getDeviceId() {
@@ -1406,6 +1525,8 @@
       const av = document.getElementById('nav-avatar');
       if (av) av.textContent = name.trim().charAt(0).toUpperCase();
     }
+    const adminBtn = document.getElementById('nav-admin-btn');
+    if (adminBtn) adminBtn.style.display = (loggedIn && currentUser?.email === 'liamgeorge1011@gmail.com') ? '' : 'none';
   }
 
   function loadDashboard() {
@@ -1556,6 +1677,12 @@
       const data = await resp.json();
       if (!resp.ok) {
         const msg = data.error || 'Invalid email or password.';
+        if (data.error === 'banned') {
+          const appealLink = document.getElementById('ban-appeal-link');
+          if (appealLink) appealLink.href = 'mailto:support@taskautomateai.co.za?subject=Account%20Suspension%20Appeal&body=My%20email%20address%3A%20' + encodeURIComponent(email);
+          document.getElementById('ban-modal').style.display = 'flex';
+          btn.disabled=false; btn.textContent='Sign in'; return;
+        }
         if (msg.toLowerCase().includes('verif')) {
           sessionStorage.setItem('rs_pending_email', email);
           g('verify-email').textContent = email;
@@ -2563,8 +2690,9 @@ ${sectionHeader('Premium Breakdown')}
   // ── Page navigation ──────────────────────────────────────────
   window.showPage = function(page) {
     // Hard gate — logged-out users cannot access protected pages
-    const gated = ['dashboard','compare','viewer','settings','team'];
+    const gated = ['dashboard','compare','viewer','settings','team','admin'];
     if (gated.includes(page) && !currentUser) { page = 'login'; }
+    if (page === 'admin' && currentUser?.email !== 'liamgeorge1011@gmail.com') { page = 'dashboard'; }
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const el = document.getElementById('page-' + page);
     if (el) { el.classList.add('active'); currentPage = page; window.scrollTo(0,0); }
@@ -2575,6 +2703,7 @@ ${sectionHeader('Premium Breakdown')}
     if (page === 'team') loadTeam();
     if (page === 'settings') loadSettingsPage();
     if (page === 'subscribe') { const sb = g('subscribe-banner'); if (sb) sb.style.display = 'none'; }
+    if (page === 'admin') loadAdminPage();
   };
 
   window.scrollToPricing = function() {
@@ -2856,6 +2985,164 @@ ${sectionHeader('Premium Breakdown')}
   }
 
   window.viewerPrintPdf = function() { doPrintPdf('viewer-results-output'); };
+
+  // ── Admin Panel ──────────────────────────────────────────────
+  let adminData = null;
+
+  async function loadAdminPage() {
+    const token = currentUser?.token;
+    if (!token) return;
+    g('adm-loading').style.display = 'block';
+    g('adm-pane-users').style.display = 'none';
+    g('adm-pane-active').style.display = 'none';
+    g('adm-pane-suspicious').style.display = 'none';
+    g('adm-error').style.display = 'none';
+    try {
+      const resp = await fetch(N8N_BASE + '/admin/users', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) throw new Error(data.error || 'Failed to load users');
+      adminData = data.users;
+      g('adm-loading').style.display = 'none';
+      adminTab('users');
+    } catch(e) {
+      g('adm-loading').style.display = 'none';
+      g('adm-error').style.display = 'block';
+      g('adm-error').textContent = 'Error loading admin data: ' + e.message;
+    }
+  }
+
+  window.adminTab = function(tab) {
+    ['users','active','suspicious'].forEach(t => {
+      const btn = g('adm-tab-' + t);
+      const pane = g('adm-pane-' + t);
+      const active = t === tab;
+      if (btn) { btn.style.color = active ? 'var(--blue)' : 'var(--gray-400)'; btn.style.borderBottom = active ? '2px solid var(--blue)' : 'none'; btn.style.marginBottom = active ? '-2px' : '0'; }
+      if (pane) pane.style.display = active ? 'block' : 'none';
+    });
+    if (tab === 'users') renderAdminUsers(adminData || []);
+    if (tab === 'active') renderAdminActive(adminData || []);
+    if (tab === 'suspicious') loadAdminActivity();
+  };
+
+  function renderAdminUsers(users) {
+    const tbody = g('adm-users-tbody');
+    if (!users || !users.length) { tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--gray-400)">No users yet.</td></tr>'; return; }
+    tbody.innerHTML = users.map(u => `
+      <tr style="border-bottom:1px solid var(--gray-100)">
+        <td style="padding:12px 12px">
+          <div style="font-weight:600;color:var(--gray-800)">${esc(u.name || '—')}</div>
+          <div style="font-size:12px;color:var(--gray-400)">${esc(u.email)}</div>
+          <div style="font-size:11px;color:var(--gray-300)">Joined ${u.created_at ? u.created_at.slice(0,10) : '—'}</div>
+        </td>
+        <td style="padding:12px">${esc(u.plan)}</td>
+        <td style="padding:12px">${u.comparisons_used}/${u.max_comparisons}</td>
+        <td style="padding:12px">${u.active_sessions}${u.suspicious_count > 0 ? ' <span style="color:#dc2626;font-weight:700" title="Suspicious activity">⚠ ' + u.suspicious_count + '</span>' : ''}</td>
+        <td style="padding:12px">${u.banned ? '<span style="background:#fef2f2;color:#dc2626;padding:3px 8px;border-radius:12px;font-size:12px;font-weight:600">Banned</span>' : '<span style="background:#f0fdf4;color:#16a34a;padding:3px 8px;border-radius:12px;font-size:12px;font-weight:600">Active</span>'}</td>
+        <td style="padding:12px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${u.active_sessions > 0 ? `<button onclick="adminForceLogout('${esc(u.id)}')" style="font-size:12px;padding:4px 10px;border:1px solid var(--gray-300);border-radius:6px;background:#fff;cursor:pointer;color:var(--gray-700)">Logout</button>` : ''}
+            ${u.banned
+              ? `<button onclick="adminUnban('${esc(u.id)}')" style="font-size:12px;padding:4px 10px;border:1px solid #16a34a;border-radius:6px;background:#fff;cursor:pointer;color:#16a34a">Unban</button>`
+              : `<button onclick="adminBan('${esc(u.id)}')" style="font-size:12px;padding:4px 10px;border:1px solid #dc2626;border-radius:6px;background:#fff;cursor:pointer;color:#dc2626">Ban</button>`}
+            <button onclick="adminOpenPlanModal('${esc(u.id)}','${esc(u.plan)}','${u.max_comparisons}')" style="font-size:12px;padding:4px 10px;border:1px solid var(--blue);border-radius:6px;background:#fff;cursor:pointer;color:var(--blue)">Plan</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+
+  function renderAdminActive(users) {
+    const active = (users || []).filter(u => u.active_sessions > 0);
+    const tbody = g('adm-active-tbody');
+    if (!active.length) { tbody.innerHTML = '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--gray-400)">No active sessions.</td></tr>'; return; }
+    tbody.innerHTML = active.map(u => `
+      <tr style="border-bottom:1px solid var(--gray-100)">
+        <td style="padding:12px"><div style="font-weight:600">${esc(u.name || '—')}</div><div style="font-size:12px;color:var(--gray-400)">${esc(u.email)}</div></td>
+        <td style="padding:12px">${esc(u.plan)}</td>
+        <td style="padding:12px">${u.active_sessions}</td>
+        <td style="padding:12px"><button onclick="adminForceLogout('${esc(u.id)}')" style="font-size:12px;padding:4px 10px;border:1px solid var(--gray-300);border-radius:6px;background:#fff;cursor:pointer">Force Logout</button></td>
+      </tr>`).join('');
+  }
+
+  async function loadAdminActivity() {
+    const token = currentUser?.token;
+    const tbody = g('adm-suspicious-tbody');
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--gray-400)">Loading...</td></tr>';
+    try {
+      const resp = await fetch(N8N_BASE + '/admin/activity', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await resp.json();
+      if (!data.success) throw new Error('Failed');
+      if (!data.events.length) { tbody.innerHTML = '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--gray-400)">No suspicious activity logged.</td></tr>'; return; }
+      tbody.innerHTML = data.events.map(e => `
+        <tr style="border-bottom:1px solid var(--gray-100)">
+          <td style="padding:10px 12px"><span style="background:#fef9c3;color:#92400e;padding:3px 8px;border-radius:10px;font-size:12px;font-weight:600">${esc(e.event_type)}</span></td>
+          <td style="padding:10px 12px;font-size:13px">${esc(e.email || '—')}</td>
+          <td style="padding:10px 12px;font-size:12px;color:var(--gray-400)">${esc(e.ip || '—')}</td>
+          <td style="padding:10px 12px;font-size:12px;color:var(--gray-400)">${e.created_at ? e.created_at.slice(0,16).replace('T',' ') : '—'}</td>
+        </tr>`).join('');
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="4" style="padding:24px;text-align:center;color:#dc2626">Error loading activity.</td></tr>';
+    }
+  }
+
+  async function adminAction(endpoint, body) {
+    const token = currentUser?.token;
+    const resp = await fetch(N8N_BASE + endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, ...body })
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.success) throw new Error(data.error || 'Action failed');
+    return data;
+  }
+
+  window.adminForceLogout = async function(userId) {
+    if (!confirm('Force logout this user?')) return;
+    try {
+      await adminAction('/admin/user/force-logout', { targetUserId: userId });
+      await loadAdminPage();
+    } catch(e) { alert('Error: ' + e.message); }
+  };
+
+  window.adminBan = async function(userId) {
+    if (!confirm('Ban this user? They will be logged out and blocked from signing in.')) return;
+    try {
+      await adminAction('/admin/user/ban', { targetUserId: userId });
+      await loadAdminPage();
+    } catch(e) { alert('Error: ' + e.message); }
+  };
+
+  window.adminUnban = async function(userId) {
+    if (!confirm('Unban this user?')) return;
+    try {
+      await adminAction('/admin/user/unban', { targetUserId: userId });
+      await loadAdminPage();
+    } catch(e) { alert('Error: ' + e.message); }
+  };
+
+  window.adminOpenPlanModal = function(userId, plan, maxComp) {
+    g('adm-plan-userid').value = userId;
+    g('adm-plan-select').value = plan;
+    g('adm-plan-max').value = maxComp;
+    g('adm-plan-modal').style.display = 'flex';
+  };
+
+  window.adminSavePlan = async function() {
+    const userId = g('adm-plan-userid').value;
+    const plan = g('adm-plan-select').value;
+    const maxComparisons = parseInt(g('adm-plan-max').value) || 5;
+    const maxSeats = plan === 'solo' ? 1 : plan === 'team' ? 2 : plan === 'agency' ? 4 : plan === 'enterprise' ? 99 : 1;
+    try {
+      await adminAction('/admin/user/set-plan', { targetUserId: userId, plan, maxComparisons, maxSeats });
+      g('adm-plan-modal').style.display = 'none';
+      await loadAdminPage();
+    } catch(e) { alert('Error: ' + e.message); }
+  };
 
   initAuth();
 
